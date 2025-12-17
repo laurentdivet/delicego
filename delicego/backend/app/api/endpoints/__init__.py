@@ -1,0 +1,1 @@
+"""Endpoints FastAPI (API interne)."""

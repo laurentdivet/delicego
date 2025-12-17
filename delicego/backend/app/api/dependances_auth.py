@@ -1,0 +1,67 @@
+from __future__ import annotations
+
+from uuid import UUID
+
+from fastapi import Depends, Header, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.dependances import fournir_session
+from app.core.configuration import parametres_application
+from app.core.securite import decoder_token_acces
+from app.domaine.modeles.auth import Role, User, UserRole
+
+
+def _extraire_bearer(authorization: str | None) -> str | None:
+    if authorization is None:
+        return None
+    prefix = "bearer "
+    if authorization.lower().startswith(prefix):
+        return authorization[len(prefix) :].strip()
+    return None
+
+
+async def fournir_utilisateur_courant(
+    session: AsyncSession = Depends(fournir_session),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+) -> User:
+    token = _extraire_bearer(authorization)
+    if token is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token manquant.")
+
+    try:
+        payload = decoder_token_acces(token, secret=parametres_application.jwt_secret)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide.")
+
+    try:
+        user_id = UUID(payload.get("sub"))
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide (sub).")
+
+    res = await session.execute(select(User).where(User.id == user_id))
+    user = res.scalar_one_or_none()
+    if user is None or not user.actif:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur inactif.")
+
+    return user
+
+
+async def fournir_roles_utilisateur(
+    user: User = Depends(fournir_utilisateur_courant),
+    session: AsyncSession = Depends(fournir_session),
+) -> list[str]:
+    res = await session.execute(
+        select(Role.code)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .where(UserRole.user_id == user.id)
+    )
+    return [r[0] for r in res.all()]
+
+
+def verifier_roles_requis(*roles_requis: str):
+    async def _dep(roles: list[str] = Depends(fournir_roles_utilisateur)) -> None:
+        if not set(roles_requis).intersection(set(roles)):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès interdit.")
+
+    return _dep

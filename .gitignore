@@ -1,0 +1,54 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# =========================
+# Environnement / secrets
+# =========================
+.env
+.env.*
+
+# =========================
+# Données sensibles (NE JAMAIS COMMIT)
+# =========================
+storage/
+delicego/storage/
+
+# =========================
+# Frontend (commit séparé)
+# =========================
+frontend/
+delicego/frontend/
+
+# =========================
+# Projets legacy / hors scope
+# =========================
+Site/
+delicego-unified/
+delicego-ecommerce/
+culinabox-voyage-gourmand/
+test_inpulse_clone
+
+# =========================
+# Rapports / artefacts
+# =========================
+backend/reports/
+*.xml
+
+# =========================
+# Archives (INTERDIT dans Git)
+# =========================
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# =========================
+# IDE / OS
+# =========================
+.vscode/
+.idea/
+.DS_Store

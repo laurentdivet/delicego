@@ -1,0 +1,38 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# =========================
+# Environnements
+# =========================
+.env
+.env.*
+
+# =========================
+# Rapports de tests
+# =========================
+backend/reports/
+*.xml
+
+# =========================
+# Fichiers temporaires / debug
+# =========================
+READY.txt
+check.py
+demo_status.py
+
+# =========================
+# Stockage local (HACCP, etc.)
+# =========================
+backend/storage/
+backend/storage/**
+
+# =========================
+# IDE / OS
+# =========================
+.vscode/
+.idea/
+.DS_Store
