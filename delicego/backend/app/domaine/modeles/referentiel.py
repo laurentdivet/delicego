@@ -92,12 +92,25 @@ class Menu(ModeleHorodate):
     Alignement Inpulse-like:
     - Le menu porte le prix et la disponibilité (actif/commandable)
     - Le menu référence une Recette (globale)
+
+    IMPORTANT (production terrain) :
+    - `gencode` est la clé machine (scannée) pour incrémenter la production réelle.
+    - Le gencode ne doit jamais être affiché à l'écran.
     """
 
     __tablename__ = "menu"
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     nom: Mapped[str] = mapped_column(String(200), nullable=False)
+
+    gencode: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        unique=True,
+        index=True,
+        default=lambda: f"AUTO-{uuid4().hex[:27]}",
+        comment="Clé machine scannée (EAN/UPC). Ne jamais afficher à l'écran.",
+    )
 
     description: Mapped[str | None] = mapped_column(
         String(500),

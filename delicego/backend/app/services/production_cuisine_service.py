@@ -167,7 +167,7 @@ class ServiceProductionCuisine:
                 Vente.magasin_id == plan.magasin_id,
                 Vente.date_vente >= debut_dt,
                 Vente.date_vente <= fin_dt,
-                Vente.canal.in_([CanalVente.COMPTOIR, CanalVente.EN_LIGNE]),
+                Vente.canal.in_([CanalVente.INTERNE, CanalVente.EXTERNE, CanalVente.AUTRE]),
             )
             .group_by("h")
         )

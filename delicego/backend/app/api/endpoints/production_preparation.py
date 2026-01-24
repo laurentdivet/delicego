@@ -13,14 +13,19 @@ from app.api.schemas.production_preparation import (
     ReponseCreneauQuantite,
     ReponseLectureProductionPreparation,
     ReponseLigneCuisine,
+    ReponseLigneProductionScan,
+    ReponseScanGencode,
     ReponseTraceabiliteProductionPreparation,
     RequeteActionAjuste,
     RequeteActionNonProduit,
     RequeteActionProduit,
+    RequeteScanGencode,
 )
 from app.domaine.modeles.production import LotProduction
+from app.domaine.modeles.referentiel import Menu
 from app.domaine.services.executer_production import (
     DonneesInvalidesProduction,
+    ErreurProduction,
     ProductionDejaExecutee,
     ServiceExecutionProduction,
 )
@@ -213,6 +218,95 @@ async def action_non_produit(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     return {"status": "ok"}
+
+
+@routeur_production_preparation_interne.post(
+    "/scan",
+    response_model=ReponseScanGencode,
+    status_code=status.HTTP_200_OK,
+)
+async def scan_gencode(
+    requete: RequeteScanGencode,
+    session: AsyncSession = Depends(fournir_session),
+) -> ReponseScanGencode:
+    """Scan d'un gencode en production.
+
+    Règles :
+    - On résout `Menu` via `Menu.gencode`.
+    - On trouve le PlanProduction du jour (magasin/date).
+    - On incrémente la production réelle via `LotProduction` (quantite_produite += 1).
+    - On renvoie l'état recalculé de la ligne (a_produire / produit / restant).
+
+    IMPORTANT :
+    - Le gencode n'est jamais renvoyé au frontend.
+    """
+
+    service_cuisine = ServiceProductionCuisine(session)
+    service_exec = ServiceExecutionProduction(session)
+
+    gencode = (requete.gencode or "").strip()
+    if not gencode:
+        raise HTTPException(status_code=400, detail="gencode manquant")
+
+    try:
+        async with session.begin():
+            res = await session.execute(select(Menu).where(Menu.gencode == gencode))
+            menu = res.scalar_one_or_none()
+            if menu is None:
+                raise HTTPException(status_code=404, detail="Produit introuvable pour ce gencode.")
+
+            plan = await service_cuisine.trouver_plan(
+                magasin_id=requete.magasin_id,
+                date_plan=requete.date,
+            )
+
+            # Incrément production réelle : un lot de +1.
+            lot = await service_cuisine.creer_lot(
+                plan=plan,
+                recette_id=menu.recette_id,
+                quantite=1.0,
+                unite="unite",
+            )
+
+            # Consommation stock associée (réel)
+            #
+            # NOTE terrain : en environnement "setup" (stock non initialisé),
+            # l'exécution FEFO peut échouer (ex: "Aucun lot disponible...").
+            # Pour ne pas bloquer le flux opérationnel de scan, on dégrade en "scan compté"
+            # (le lot de production est quand même persisté).
+            try:
+                await service_exec.executer_dans_transaction(lot_production_id=lot.id)
+            except (DonneesInvalidesProduction, ProductionDejaExecutee, ErreurProduction):
+                # En mode "scan compté" (ou si lot déjà exécuté / stock non initialisé),
+                # on ne bloque pas le scan.
+                pass
+
+            # Recalcule de la ligne
+            lignes = await service_cuisine.lire_lignes(plan_production_id=plan.id)
+            ligne = next((l for l in lignes if l.recette_id == menu.recette_id), None)
+            if ligne is None:
+                raise HTTPException(status_code=404, detail="Recette absente du plan du jour.")
+
+            a_produire = float(ligne.quantite_planifiee)
+            produit = float(ligne.quantite_produite)
+            restant = float(a_produire - produit)
+
+            return ReponseScanGencode(
+                ligne=ReponseLigneProductionScan(
+                    id=str(ligne.recette_id),
+                    produit_nom=menu.nom,
+                    a_produire=a_produire,
+                    produit=produit,
+                    restant=restant,
+                )
+            )
+
+    except HTTPException:
+        raise
+    except (DonneesInvalidesProduction, ProductionDejaExecutee) as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
 
 @routeur_production_preparation_interne.get(

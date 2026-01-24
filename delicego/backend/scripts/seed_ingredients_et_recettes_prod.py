@@ -36,7 +36,6 @@ def normaliser_nom(nom: str) -> str:
 class IngredientSeed:
     nom: str
     unite_stock: str
-    unite_mesure: str
 
 
 @dataclass(frozen=True)
@@ -56,11 +55,11 @@ class RecetteSeed:
 
 
 INGREDIENTS_A_CREER: list[IngredientSeed] = [
-    IngredientSeed("RIZ POUR CUISINE JAPONAISE", "kg", "kg"),
-    IngredientSeed("HUILE DE SÉSAME", "litre", "litre"),
-    IngredientSeed("NOUILLES DE RIZ", "kg", "kg"),
-    IngredientSeed("CACAHUÈTES CONCASSÉES", "kg", "kg"),
-    IngredientSeed("CONCENTRÉ DE TAMARIN", "kg", "kg"),
+    IngredientSeed("RIZ POUR CUISINE JAPONAISE", "kg"),
+    IngredientSeed("HUILE DE SÉSAME", "litre"),
+    IngredientSeed("NOUILLES DE RIZ", "kg"),
+    IngredientSeed("CACAHUÈTES CONCASSÉES", "kg"),
+    IngredientSeed("CONCENTRÉ DE TAMARIN", "kg"),
 ]
 
 
@@ -141,19 +140,25 @@ async def get_or_create_menu(session, magasin: Magasin, *, nom: str, prix: float
     return menu
 
 
-async def get_or_create_recette(session, magasin: Magasin, *, menu: Menu, nom: str) -> Recette:
+async def get_or_create_recette(session, *, menu: Menu, nom: str) -> Recette:
+    # Modèle actuel : Recette est globale, et Menu référence Recette.
     nom = normaliser_nom(nom)
-    res = await session.execute(
-        select(Recette).where(Recette.menu_id == menu.id).where(Recette.magasin_id == magasin.id)
-    )
-    recette = res.scalar_one_or_none()
-    if recette:
-        recette.nom = nom
-        return recette
 
-    recette = Recette(nom=nom, menu_id=menu.id, magasin_id=magasin.id)
-    session.add(recette)
-    await session.flush()
+    # Si le menu a déjà une recette => la mettre à jour (nom) et réutiliser.
+    if getattr(menu, "recette_id", None) is not None and getattr(menu, "recette", None) is not None:
+        menu.recette.nom = nom
+        return menu.recette
+
+    # Sinon on cherche une recette globale par nom (idempotent).
+    res = await session.execute(select(Recette).where(Recette.nom == nom))
+    recette = res.scalar_one_or_none()
+    if recette is None:
+        recette = Recette(nom=nom)
+        session.add(recette)
+        await session.flush()
+
+    # Lier le menu à la recette
+    menu.recette_id = recette.id
     return recette
 
 
@@ -170,7 +175,6 @@ async def get_or_create_ingredient(session, seed: IngredientSeed) -> Ingredient:
     ing = Ingredient(
         nom=nom,
         unite_stock=seed.unite_stock,
-        unite_mesure=seed.unite_mesure,
         actif=True,
     )
     session.add(ing)
@@ -214,6 +218,9 @@ async def seed() -> None:
             ing = await get_or_create_ingredient(session, ing_seed)
             ingredients_map[normaliser_nom(ing_seed.nom)] = ing
 
+        # NB: Pour ce seed "minimal prod", on crée aussi les ingrédients référencés
+        # dans les recettes si absents (sinon le seed est inutilisable sur une base vide).
+
         # 2) Recettes + lignes
         for recette_seed in RECETTES_A_CREER:
             menu = await get_or_create_menu(
@@ -223,14 +230,16 @@ async def seed() -> None:
                 prix=recette_seed.menu_prix,
                 description=recette_seed.menu_description,
             )
-            recette = await get_or_create_recette(session, magasin, menu=menu, nom=recette_seed.recette_nom)
+            recette = await get_or_create_recette(session, menu=menu, nom=recette_seed.recette_nom)
 
             for ligne in recette_seed.lignes:
                 ing_nom = normaliser_nom(ligne.ingredient_nom)
                 res_ing = await session.execute(select(Ingredient).where(Ingredient.nom == ing_nom))
                 ingredient = res_ing.scalar_one_or_none()
                 if ingredient is None:
-                    raise RuntimeError(f"Ingrédient introuvable en base: {ligne.ingredient_nom}")
+                    ingredient = Ingredient(nom=ing_nom, unite_stock=ligne.unite, actif=True)
+                    session.add(ingredient)
+                    await session.flush()
 
                 await upsert_ligne_recette(
                     session,

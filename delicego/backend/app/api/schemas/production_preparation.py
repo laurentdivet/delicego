@@ -33,6 +33,25 @@ class ReponseLectureProductionPreparation(BaseModel):
     cuisine: list[ReponseLigneCuisine]
 
 
+# ==============================
+# Contrat API (scan gencode)
+# ==============================
+
+
+class RequeteScanGencode(BaseModel):
+    gencode: str
+    magasin_id: UUID
+    date: date
+
+
+class ReponseLigneProductionScan(BaseModel):
+    id: str
+    produit_nom: str
+    a_produire: float
+    produit: float
+    restant: float
+
+
 class RequeteActionProduit(BaseModel):
     magasin_id: UUID
     date: date
@@ -61,3 +80,7 @@ class EvenementTraceabilite(BaseModel):
 
 class ReponseTraceabiliteProductionPreparation(BaseModel):
     evenements: list[EvenementTraceabilite]
+
+
+class ReponseScanGencode(BaseModel):
+    ligne: ReponseLigneProductionScan

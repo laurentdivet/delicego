@@ -396,7 +396,8 @@ async def upsert_lignes_recette(
 
 
 async def seed_real_data() -> None:
-    engine = create_async_engine(parametres_application.url_base_donnees_effective, pool_pre_ping=True)
+    # NB: la configuration expose `url_base_donnees` (et non `url_base_donnees_effective`)
+    engine = create_async_engine(parametres_application.url_base_donnees, pool_pre_ping=True)
     sm = async_sessionmaker(engine, expire_on_commit=False)
 
     created_mag = 0

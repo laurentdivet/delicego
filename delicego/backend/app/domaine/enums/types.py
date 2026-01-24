@@ -12,16 +12,20 @@ class TypeMouvementStock(str, enum.Enum):
 
 
 class CanalVente(str, enum.Enum):
+    """Canal par lequel une vente est réalisée.
+
+    NOTE : la base de données utilise l'enum PostgreSQL `canalvente`.
+    Dans l'environnement actuel, les valeurs présentes en DB sont :
+    - INTERNE
+    - EXTERNE
+    - AUTRE
+
+    On aligne donc l'Enum Python sur ces valeurs.
     """
-    Canal par lequel une vente est réalisée.
-    IMPORTANT :
-    - EN_LIGNE est prévu pour l’interface client future
-    - COMPTOIR couvre la vente directe en magasin
-    """
-    COMPTOIR = "COMPTOIR"
-    LIVRAISON = "LIVRAISON"
-    EN_LIGNE = "EN_LIGNE"
+
     INTERNE = "INTERNE"
+    EXTERNE = "EXTERNE"
+    AUTRE = "AUTRE"
 
 
 class StatutPlanProduction(str, enum.Enum):
