@@ -36,3 +36,6 @@ backend/storage/**
 .vscode/
 .idea/
 .DS_Store
+
+*.pdf
+*.xlsx
