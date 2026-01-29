@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timezone
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domaine.enums.types import CanalVente
@@ -82,19 +82,64 @@ class ServiceProductionCuisine:
         return plan
 
     async def lire_lignes(self, *, plan_production_id: UUID) -> list[LigneCuisine]:
-        # Lignes planifiées + nom recette
+        """Lit les lignes planifiées pour l'écran cuisine.
+
+        Transition safe (menu_id):
+        - Si `ligne_plan_production.menu_id` est présent => on affiche `menu.nom`.
+        - Sinon fallback via `recette_id` dans le magasin du plan.
+          Pour éviter toute duplication (recette présente dans plusieurs menus du magasin),
+          on résout via une sous-requête déterministe (min(menu.nom)).
+        - Si aucune résolution menu possible => fallback = `recette.nom`.
+
+        Requête de contrôle ambiguïtés (debug/ops):
+        SELECT magasin_id, recette_id, count(*) FROM menu GROUP BY 1,2 HAVING count(*)>1;
+        """
+
+        # Sous-requête fallback: pour chaque recette dans un magasin, un nom de menu déterministe.
+        menu_nom_par_recette_magasin = (
+            select(
+                Menu.magasin_id.label("magasin_id"),
+                Menu.recette_id.label("recette_id"),
+                func.min(Menu.nom).label("menu_nom"),
+            )
+            .group_by(Menu.magasin_id, Menu.recette_id)
+            .subquery()
+        )
+
+        # Lignes planifiées + nom affiché "safe" (menu si possible, sinon recette)
+        # - JOIN plan -> magasin_id
+        # - JOIN recette
+        # - LEFT JOIN menu direct via menu_id
+        # - LEFT JOIN fallback via (magasin_id, recette_id)
         res = await self._session.execute(
             select(
                 LignePlanProduction.recette_id,
-                Recette.nom,
+                case(
+                    (Menu.nom.is_not(None), Menu.nom),
+                    (menu_nom_par_recette_magasin.c.menu_nom.is_not(None), menu_nom_par_recette_magasin.c.menu_nom),
+                    else_=Recette.nom,
+                ).label("libelle"),
                 LignePlanProduction.quantite_a_produire,
             )
             .select_from(LignePlanProduction)
+            .join(PlanProduction, PlanProduction.id == LignePlanProduction.plan_production_id)
             .join(Recette, Recette.id == LignePlanProduction.recette_id)
+            .outerjoin(Menu, Menu.id == LignePlanProduction.menu_id)
+            .outerjoin(
+                menu_nom_par_recette_magasin,
+                (menu_nom_par_recette_magasin.c.magasin_id == PlanProduction.magasin_id)
+                & (menu_nom_par_recette_magasin.c.recette_id == LignePlanProduction.recette_id),
+            )
             .where(LignePlanProduction.plan_production_id == plan_production_id)
-            .order_by(Recette.nom.asc())
+            .order_by(
+                case(
+                    (Menu.nom.is_not(None), Menu.nom),
+                    (menu_nom_par_recette_magasin.c.menu_nom.is_not(None), menu_nom_par_recette_magasin.c.menu_nom),
+                    else_=Recette.nom,
+                ).asc()
+            )
         )
-        base = [(rid, str(nom), float(q or 0.0)) for rid, nom, q in res.all()]
+        base = [(rid, str(lib), float(q or 0.0)) for rid, lib, q in res.all()]
 
         # Quantité produite cumulée par recette (lots)
         res_prod = await self._session.execute(

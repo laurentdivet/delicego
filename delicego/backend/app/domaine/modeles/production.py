@@ -86,6 +86,16 @@ class LignePlanProduction(ModeleHorodate):
         nullable=False,
     )
 
+    # Transition safe vers (plan_production_id, menu_id) :
+    # - menu_id est nullable pour ne pas casser l'existant (endpoints/front encore basés sur recette_id)
+    # - backfill via migration quand l'association recette->menu est non ambiguë dans le magasin
+    menu_id: Mapped[UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("menu.id"),
+        nullable=True,
+        comment="Menu local (nullable pour compat; transition vers plan/menu)",
+    )
+
     quantite_a_produire: Mapped[float] = mapped_column(
         nullable=False,
         comment="Quantité planifiée à produire",
@@ -93,6 +103,7 @@ class LignePlanProduction(ModeleHorodate):
 
     plan_production = relationship("PlanProduction")
     recette = relationship("Recette")
+    menu = relationship("Menu")
 
 
 class LotProduction(ModeleHorodate):
@@ -199,3 +210,4 @@ class LigneConsommation(ModeleHorodate):
 Index("ix_plan_production_date_plan", PlanProduction.date_plan)
 Index("ix_lot_production_produit_le", LotProduction.produit_le)
 Index("ix_ligne_consommation_lot_production", LigneConsommation.lot_production_id)
+Index("ix_ligne_plan_production_menu_id", LignePlanProduction.menu_id)
