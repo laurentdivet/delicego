@@ -36,7 +36,7 @@ class CommandeClient(ModeleHorodate):
     )
 
     statut: Mapped[StatutCommandeClient] = mapped_column(
-        Enum(StatutCommandeClient, name="statut_commande_client"),
+        Enum(StatutCommandeClient, name="statut_commande_client", native_enum=False, length=50),
         nullable=False,
         default=StatutCommandeClient.EN_ATTENTE,
     )

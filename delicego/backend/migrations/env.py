@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -14,6 +15,13 @@ from app.domaine.modeles import BaseModele  # important : importe tous les modè
 # Configuration Alembic
 config = context.config
 
+
+# If DATABASE_URL is provided, force Alembic to use it.
+# This must be done before the engine is created.
+database_url_env = os.getenv("DATABASE_URL")
+if database_url_env:
+    config.set_main_option("sqlalchemy.url", database_url_env)
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
@@ -22,7 +30,9 @@ target_metadata = BaseModele.metadata
 
 
 def url_base_donnees() -> str:
-    return parametres_application.url_base_donnees
+    # Prefer the (potentially overridden) Alembic sqlalchemy.url.
+    # Fallback to application settings when not provided.
+    return config.get_main_option("sqlalchemy.url") or parametres_application.url_base_donnees
 
 
 def run_migrations_offline() -> None:

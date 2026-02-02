@@ -105,7 +105,7 @@ class CommandeFournisseur(ModeleHorodate):
     date_commande: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
 
     statut: Mapped[StatutCommandeFournisseur] = mapped_column(
-        Enum(StatutCommandeFournisseur, name="statut_commande_fournisseur"),
+        Enum(StatutCommandeFournisseur, name="statut_commande_fournisseur", native_enum=False, length=50),
         nullable=False,
         default=StatutCommandeFournisseur.BROUILLON,
     )

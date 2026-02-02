@@ -31,7 +31,7 @@ class Magasin(ModeleHorodate):
     nom: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
 
     type_magasin: Mapped[TypeMagasin] = mapped_column(
-        Enum(TypeMagasin, name="type_magasin"),
+        Enum(TypeMagasin, name="type_magasin", native_enum=False, length=50),
         nullable=False,
     )
 

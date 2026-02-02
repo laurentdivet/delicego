@@ -35,7 +35,7 @@ class EcritureComptable(ModeleHorodate):
     date_ecriture: Mapped[date] = mapped_column(Date, nullable=False)
 
     type: Mapped[TypeEcritureComptable] = mapped_column(
-        Enum(TypeEcritureComptable, name="type_ecriture_comptable"),
+        Enum(TypeEcritureComptable, name="type_ecriture_comptable", native_enum=False, length=50),
         nullable=False,
     )
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import uuid4
 
+import sqlalchemy as sa
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -21,8 +22,14 @@ class EquipementThermique(ModeleHorodate):
     nom: Mapped[str] = mapped_column(String(200), nullable=False)
     actif: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    type_equipement: Mapped[TypeEquipementThermique] = mapped_column(nullable=False)
-    zone: Mapped[ZoneEquipementThermique] = mapped_column(nullable=False)
+    type_equipement: Mapped[TypeEquipementThermique] = mapped_column(
+        sa.Enum(TypeEquipementThermique, name="typeequipementthermique", native_enum=False, length=50),
+        nullable=False,
+    )
+    zone: Mapped[ZoneEquipementThermique] = mapped_column(
+        sa.Enum(ZoneEquipementThermique, name="zoneequipementthermique", native_enum=False, length=50),
+        nullable=False,
+    )
 
     temperature_min: Mapped[float | None] = mapped_column(nullable=True)
     temperature_max: Mapped[float | None] = mapped_column(nullable=True)

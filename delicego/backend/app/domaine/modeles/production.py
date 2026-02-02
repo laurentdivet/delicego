@@ -50,7 +50,7 @@ class PlanProduction(ModeleHorodate):
     )
 
     statut: Mapped[StatutPlanProduction] = mapped_column(
-        Enum(StatutPlanProduction, name="statutplanproduction"),
+        Enum(StatutPlanProduction, name="statutplanproduction", native_enum=False, length=50),
         nullable=False,
         default=StatutPlanProduction.BROUILLON,
     )

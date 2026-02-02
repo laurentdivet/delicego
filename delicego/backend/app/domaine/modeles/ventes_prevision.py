@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from uuid import uuid4
 
+import sqlalchemy as sa
 from sqlalchemy import Date, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -18,7 +19,10 @@ class Vente(ModeleHorodate):
 
     magasin_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("magasin.id"), nullable=False)
     date_vente: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    canal: Mapped[CanalVente] = mapped_column(nullable=False)
+    canal: Mapped[CanalVente] = mapped_column(
+        sa.Enum(CanalVente, name="canalvente", native_enum=False, length=50),
+        nullable=False,
+    )
 
     menu_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("menu.id"), nullable=True)
 

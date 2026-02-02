@@ -98,7 +98,7 @@ class MouvementStock(ModeleHorodate):
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
 
     type_mouvement: Mapped[TypeMouvementStock] = mapped_column(
-        Enum(TypeMouvementStock, name="type_mouvement_stock"),
+        Enum(TypeMouvementStock, name="type_mouvement_stock", native_enum=False, length=50),
         nullable=False,
     )
 

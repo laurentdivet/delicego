@@ -40,40 +40,14 @@ backend/storage/**
 *.pdf
 *.xlsx
 
-# =========================
-# Ignore temporaire (DeliceGo)
-# =========================
+###
+# NOTE (repo): on versionne les migrations Alembic et les scripts nécessaires
+# pour garantir un setup reproductible (CI/CD + onboarding).
+#
+# Si tu veux ignorer des artefacts locaux, ajoute-les plutôt en bas (section
+# "Local only") ou via un .gitignore personnel global.
+###
 
-# Dossiers
-backend/data/
-backend/docs/
-backend/models/
-delicego_sql/
-
-# Endpoints / schemas / modèles (si tu ne veux pas les versionner pour l’instant)
-backend/app/api/endpoints/catalogue.py
-backend/app/api/endpoints/ingredients.py
-backend/app/api/schemas/catalogue.py
-backend/app/api/schemas/ingredients.py
-backend/app/domaine/modeles/catalogue.py
-
-# Migrations (si tu ne veux pas les versionner pour l’instant)
-backend/migrations/versions/*.py
-
-# Scripts utilitaires
-backend/scripts/rapport_mapping_ingredients.csv
-backend/scripts/ingredient_product_aliases.json
-backend/scripts/import_*.py
-backend/scripts/map_*.py
-backend/scripts/backfill_*.py
-backend/scripts/seed_all.py
-backend/scripts/smoke_*.sh
-backend/scripts/predict_sales.py
-backend/scripts/prepare_dataset.py
-backend/scripts/train_model.py
-
-# Tests
-backend/tests/
-
-# Config locale
-pytest.ini
+# Local only (artefacts/dev) — à compléter au besoin
+# delicego_v2_before_solution2.dump
+# delicego_v2_before_solution2.sql

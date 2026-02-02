@@ -22,8 +22,23 @@ depends_on = None
 
 def upgrade() -> None:
     # 1) Ajout du champ en nullable pour permettre un backfill.
-    op.add_column("menu", sa.Column("gencode", sa.String(length=32), nullable=True))
-
+    # idempotence: colonne peut déjà exister sur certains environnements
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema='public'
+                  AND table_name='menu'
+                  AND column_name='gencode'
+            ) THEN
+                ALTER TABLE menu ADD COLUMN gencode VARCHAR(32);
+            END IF;
+        END $$;
+        """
+    )
     # 2) Backfill minimal : si la table contient déjà des lignes, on génère un gencode
     # déterministe et unique à partir de l'ID.
     #
@@ -37,12 +52,56 @@ def upgrade() -> None:
     )
 
     # 3) Contraintes : NOT NULL + UNIQUE + INDEX
+    # 3) Contraintes : NOT NULL + UNIQUE + INDEX
+    # idempotence: contrainte/index peuvent déjà exister selon les environnements
     op.alter_column("menu", "gencode", existing_type=sa.String(length=32), nullable=False)
-    op.create_unique_constraint("uq_menu_gencode", "menu", ["gencode"])
-    op.create_index("ix_menu_gencode", "menu", ["gencode"], unique=False)
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint WHERE conname='uq_menu_gencode'
+            ) THEN
+                ALTER TABLE menu ADD CONSTRAINT uq_menu_gencode UNIQUE (gencode);
+            END IF;
+        END $$;
+        """
+    )
+    op.execute(
+        """
+        CREATE INDEX IF NOT EXISTS ix_menu_gencode ON menu (gencode);
+        """
+    )
 
 
 def downgrade() -> None:
-    op.drop_index("ix_menu_gencode", table_name="menu")
-    op.drop_constraint("uq_menu_gencode", "menu", type_="unique")
-    op.drop_column("menu", "gencode")
+    # idempotence
+    op.execute("DROP INDEX IF EXISTS ix_menu_gencode")
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1 FROM pg_constraint WHERE conname='uq_menu_gencode'
+            ) THEN
+                ALTER TABLE menu DROP CONSTRAINT uq_menu_gencode;
+            END IF;
+        END $$;
+        """
+    )
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema='public'
+                  AND table_name='menu'
+                  AND column_name='gencode'
+            ) THEN
+                ALTER TABLE menu DROP COLUMN gencode;
+            END IF;
+        END $$;
+        """
+    )
