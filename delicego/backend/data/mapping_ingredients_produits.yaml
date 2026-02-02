@@ -1,0 +1,32 @@
+- ingredient_nom: "Oignon"
+  # Exemple: priorité 1 = SKU fournisseur (si connu)
+  produit_reference_fournisseur: null
+  # Fallback: libellé produit exact (attention: doit exister dans table produit)
+  # NOTE: à compléter selon ton catalogue (Foodex) ; ici on laisse vide pour éviter un mauvais mapping.
+  produit_libelle: null
+  unite_consommation: "g"
+  facteur_conversion: 1000
+
+- ingredient_nom: "Riz"
+  produit_reference_fournisseur: null
+  produit_libelle: "RIZ CANTONAIS"
+  unite_consommation: "g"
+  facteur_conversion: 1000
+
+- ingredient_nom: "Crevettes"
+  produit_reference_fournisseur: null
+  produit_libelle: null
+  unite_consommation: "g"
+  facteur_conversion: 1000
+
+- ingredient_nom: "Sauce soja"
+  produit_reference_fournisseur: null
+  produit_libelle: null
+  unite_consommation: "ml"
+  facteur_conversion: 1000
+
+- ingredient_nom: "Sauce poisson"
+  produit_reference_fournisseur: null
+  produit_libelle: null
+  unite_consommation: "ml"
+  facteur_conversion: 1000

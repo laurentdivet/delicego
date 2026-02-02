@@ -1,0 +1,617 @@
+ingredient_nom,recette_nom,quantite,produit_mapped
+California saumon avocat,ALL CALIFORNIA (janvier_2025),86.0,NULL
+California surimi avocat,ALL CALIFORNIA (janvier_2025),88.0,NULL
+California thon cuit,ALL CALIFORNIA (janvier_2025),86.0,NULL
+California saumon cheese concombre,ALL CALIFORNIA (janvier_2025),86.0,NULL
+Nigiri saumon top cheese,ALL CHEESE (janvier_2025),128.0,NULL
+Saumon roll cheese,ALL CHEESE (janvier_2025),144.0,NULL
+California saumon cheese,ALL CHEESE (janvier_2025),129.0,NULL
+Nigiri saumon,ALL FISH (janvier_2025),60.0,NULL
+Nigiri thon,ALL FISH (janvier_2025),60.0,NULL
+Wasa crunch surimi,ALL FISH (janvier_2025),108.0,NULL
+Cali spicy surimi,ALL FISH (janvier_2025),88.0,NULL
+Spring roll saumon avocat,ALL FISH (janvier_2025),131.0,NULL
+Maki saumon,ALL MAKI (janvier_2025),60.0,NULL
+Maki concombre cheese,ALL MAKI (janvier_2025),60.0,NULL
+Maki thon,ALL MAKI (janvier_2025),60.0,NULL
+Maki avocat,ALL MAKI (janvier_2025),60.0,NULL
+Maki saumon,ALL SALMON (janvier_2025),60.0,NULL
+California saumon,ALL SALMON (janvier_2025),129.0,NULL
+Springroll saumon,ALL SALMON (janvier_2025),131.0,NULL
+Nigiri saumon top wasabi,ALL SPICY (janvier_2025),124.0,NULL
+California spicy saumon,ALL SPICY (janvier_2025),129.0,NULL
+California spicy surimi,ALL SPICY (janvier_2025),88.0,NULL
+Wasa crunch surimi,ALL SPICY (janvier_2025),108.0,NULL
+Spring roll saumon,ALL SPRING (janvier_2025),131.0,NULL
+Spring chou rouge,ALL SPRING (janvier_2025),129.0,NULL
+Spring roll thon cuit,ALL SPRING (janvier_2025),131.0,NULL
+California chou rouge,ALL VEGGIE (janvier_2025),129.0,NULL
+Maki carotte coriandre,ALL VEGGIE (janvier_2025),94.0,NULL
+Spring roll concombre cheese,ALL VEGGIE (janvier_2025),114.0,NULL
+Nigiri saumon,ALL WHITE (janvier_2025),120.0,NULL
+Spring roll saumon mangue,ALL WHITE (janvier_2025),138.0,NULL
+White wasa crunch saumon,ALL WHITE (janvier_2025),144.0,NULL
+Bœuf au Basilic,BŒUF AU BASILIC (janvier_2025),150.0,NULL
+Riz parfumé,BŒUF AU BASILIC (janvier_2025),200.0,NULL
+Basilic (Topping),BŒUF AU BASILIC (janvier_2025),1.0,NULL
+Bœuf aux oignons,BŒUF AUX OIGNONS (janvier_2025),150.0,NULL
+Riz parfumé,BŒUF AUX OIGNONS (janvier_2025),200.0,NULL
+Cébette (Topping),BŒUF AUX OIGNONS (janvier_2025),2.0,NULL
+Oignons Frits (Topping),BŒUF AUX OIGNONS (janvier_2025),5.0,OIGNONS FRITS SANS GLUTEN 500G
+Beignets crevette,BEIGNETS AUX CREVETTES (janvier_2025),120.0,NULL
+Riz vinaigré,BIG NIGIRI SAUMON (janvier_2025),180.0,NULL
+Saumon,BIG NIGIRI SAUMON (janvier_2025),90.0,NULL
+Riz vinaigré,BIG NIGIRI THON SAUMON (janvier_2025),180.0,NULL
+Saumon,BIG NIGIRI THON SAUMON (janvier_2025),50.0,NULL
+Thon,BIG NIGIRI THON SAUMON (janvier_2025),40.0,NULL
+Salade iceberg,BO BUN BŒUF / NEM POULET (janvier_2025),30.0,NULL
+Carotte rapé,BO BUN BŒUF / NEM POULET (janvier_2025),30.0,NULL
+Haricot mungo,BO BUN BŒUF / NEM POULET (janvier_2025),30.0,NULL
+Concombre,BO BUN BŒUF / NEM POULET (janvier_2025),30.0,NULL
+Menthe,BO BUN BŒUF / NEM POULET (janvier_2025),1.0,NULL
+Coriandre,BO BUN BŒUF / NEM POULET (janvier_2025),1.0,NULL
+Bœuf Basilic,BO BUN BŒUF / NEM POULET (janvier_2025),60.0,NULL
+Nems poulet,BO BUN BŒUF / NEM POULET (janvier_2025),30.0,NULL
+Vermicelle,BO BUN BŒUF / NEM POULET (janvier_2025),60.0,NULL
+Salade iceberg,BO BUN PORC / NEM PORC (janvier_2025),30.0,NULL
+Carotte rapé,BO BUN PORC / NEM PORC (janvier_2025),30.0,NULL
+Haricot mungo,BO BUN PORC / NEM PORC (janvier_2025),30.0,VERMICELLES DE HARICOT MUNGO 1KG
+Concombre,BO BUN PORC / NEM PORC (janvier_2025),30.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Menthe,BO BUN PORC / NEM PORC (janvier_2025),1.0,NULL
+Coriandre,BO BUN PORC / NEM PORC (janvier_2025),1.0,NULL
+Porc caramel maison,BO BUN PORC / NEM PORC (janvier_2025),60.0,NULL
+Nems porc,BO BUN PORC / NEM PORC (janvier_2025),30.0,NULL
+Vermicelle,BO BUN PORC / NEM PORC (janvier_2025),60.0,NULL
+Salade iceberg,BO BUN POULET / NEM POULET (janvier_2025),30.0,NULL
+Carotte rapé,BO BUN POULET / NEM POULET (janvier_2025),30.0,NULL
+Haricot mungo,BO BUN POULET / NEM POULET (janvier_2025),30.0,NULL
+Concombre,BO BUN POULET / NEM POULET (janvier_2025),30.0,NULL
+Menthe,BO BUN POULET / NEM POULET (janvier_2025),1.0,NULL
+Coriandre,BO BUN POULET / NEM POULET (janvier_2025),1.0,NULL
+Poulet Basilic Wok Maison,BO BUN POULET / NEM POULET (janvier_2025),60.0,NULL
+Nems poulet,BO BUN POULET / NEM POULET (janvier_2025),30.0,NULL
+Vermicelle,BO BUN POULET / NEM POULET (janvier_2025),60.0,NULL
+Riz vinaigré,CALIFORNIA POULET TEMPURA (janvier_2025),120.0,NULL
+Algue,CALIFORNIA POULET TEMPURA (janvier_2025),1.0,ALGUE NORI GRILLEE TEMAKI 100 PCS
+Poulet pané,CALIFORNIA POULET TEMPURA (janvier_2025),30.0,NULL
+Concombre,CALIFORNIA POULET TEMPURA (janvier_2025),15.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Graines de sésame,CALIFORNIA POULET TEMPURA (janvier_2025),1.0,NULL
+Riz vinaigré,CALIFORNIA SAUMON AVOCAT (janvier_2025),120.0,NULL
+Algue,CALIFORNIA SAUMON AVOCAT (janvier_2025),1.0,NULL
+Saumon,CALIFORNIA SAUMON AVOCAT (janvier_2025),20.0,NULL
+Avocat,CALIFORNIA SAUMON AVOCAT (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Concombre,CALIFORNIA SAUMON AVOCAT (janvier_2025),10.0,NULL
+Graines de sésame,CALIFORNIA SAUMON AVOCAT (janvier_2025),1.0,NULL
+Riz vinaigré,CALIFORNIA SAUMON CHEESE (janvier_2025),120.0,NULL
+Algue,CALIFORNIA SAUMON CHEESE (janvier_2025),1.0,ALGUE NORI GRILLEE TEMAKI 100 PCS
+Saumon,CALIFORNIA SAUMON CHEESE (janvier_2025),20.0,NULL
+Cheese,CALIFORNIA SAUMON CHEESE (janvier_2025),20.0,NULL
+Concombre,CALIFORNIA SAUMON CHEESE (janvier_2025),10.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Graines de sésame,CALIFORNIA SAUMON CHEESE (janvier_2025),1.0,NULL
+Riz vinaigré,CALIFORNIA SAUMON SPICY (janvier_2025),120.0,NULL
+Algue,CALIFORNIA SAUMON SPICY (janvier_2025),1.0,NULL
+Saumon,CALIFORNIA SAUMON SPICY (janvier_2025),20.0,NULL
+Avocat,CALIFORNIA SAUMON SPICY (janvier_2025),20.0,NULL
+Concombre,CALIFORNIA SAUMON SPICY (janvier_2025),10.0,NULL
+Mélange d’épices,CALIFORNIA SAUMON SPICY (janvier_2025),1.0,NULL
+Riz vinaigré,CALIFORNIA SURIMI AVOCAT (janvier_2025),120.0,NULL
+Algue,CALIFORNIA SURIMI AVOCAT (janvier_2025),1.0,ALGUE NORI GRILLEE TEMAKI 100 PCS
+Surimi mayonnaise,CALIFORNIA SURIMI AVOCAT (janvier_2025),25.0,NULL
+Avocat,CALIFORNIA SURIMI AVOCAT (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Concombre,CALIFORNIA SURIMI AVOCAT (janvier_2025),10.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Graines de sésame,CALIFORNIA SURIMI AVOCAT (janvier_2025),1.0,NULL
+Riz vinaigré,CALIFORNIA SURIMI SPICY (janvier_2025),120.0,NULL
+Algue,CALIFORNIA SURIMI SPICY (janvier_2025),1.0,NULL
+Surimi mayonnaise,CALIFORNIA SURIMI SPICY (janvier_2025),25.0,NULL
+Avocat,CALIFORNIA SURIMI SPICY (janvier_2025),20.0,NULL
+Concombre,CALIFORNIA SURIMI SPICY (janvier_2025),10.0,NULL
+Mélange d’épices,CALIFORNIA SURIMI SPICY (janvier_2025),1.0,NULL
+Riz vinaigré,CALIFORNIA THON CUIT MAYO (janvier_2025),120.0,NULL
+Algue,CALIFORNIA THON CUIT MAYO (janvier_2025),1.0,ALGUE NORI GRILLEE TEMAKI 100 PCS
+Thon cuit mayonnaise,CALIFORNIA THON CUIT MAYO (janvier_2025),30.0,NULL
+Avocat,CALIFORNIA THON CUIT MAYO (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Graines de sésame,CALIFORNIA THON CUIT MAYO (janvier_2025),1.0,NULL
+Riz vinaigré,CALIFORNIA VEGGIE (janvier_2025),120.0,NULL
+Algue,CALIFORNIA VEGGIE (janvier_2025),1.0,NULL
+Chou rouge mariné au vinaigre js alpha,CALIFORNIA VEGGIE (janvier_2025),20.0,NULL
+Avocat,CALIFORNIA VEGGIE (janvier_2025),20.0,NULL
+Mayo,CALIFORNIA VEGGIE (janvier_2025),10.0,NULL
+Graines de sésame,CALIFORNIA VEGGIE (janvier_2025),1.0,NULL
+Carotte,CAROTTE MARINÉE (janvier_2025),200.0,NULL
+Vinaigre js alpha,CAROTTE MARINÉE (janvier_2025),100.0,NULL
+Riz vinaigré,CHIRASHI MARINÉ (janvier_2025),200.0,NULL
+Saumon mariné,CHIRASHI MARINÉ (janvier_2025),35.0,NULL
+Thon mariné,CHIRASHI MARINÉ (janvier_2025),35.0,NULL
+Concombre,CHIRASHI MARINÉ (janvier_2025),40.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Poireau,CHIRASHI MARINÉ (janvier_2025),5.0,NULL
+Coriandre,CHIRASHI MARINÉ (janvier_2025),1.0,NULL
+Graines de sésame,CHIRASHI MARINÉ (janvier_2025),1.0,NULL
+Shichimi,CHIRASHI MARINÉ (janvier_2025),1.0,NULL
+Riz vinaigré,CHIRASHI SAUMON (janvier_2025),200.0,NULL
+Saumon,CHIRASHI SAUMON (janvier_2025),110.0,NULL
+Graines de sésame,CHIRASHI SAUMON (janvier_2025),1.0,NULL
+Riz vinaigré,CHIRASHI THON SAUMON (janvier_2025),200.0,NULL
+Saumon,CHIRASHI THON SAUMON (janvier_2025),70.0,NULL
+Thon,CHIRASHI THON SAUMON (janvier_2025),40.0,NULL
+Graines de sésame,CHIRASHI THON SAUMON (janvier_2025),1.0,NULL
+Chou rouge,CHOU ROUGE MARINÉ (janvier_2025),200.0,NULL
+Vinaigre js alpha,CHOU ROUGE MARINÉ (janvier_2025),100.0,NULL
+Crevettes aigre douce,CREVETTES SAUCE AIGRE DOUCE (janvier_2025),150.0,NULL
+Riz parfumé,CREVETTES SAUCE AIGRE DOUCE (janvier_2025),200.0,NULL
+Cébette (Topping),CREVETTES SAUCE AIGRE DOUCE (janvier_2025),2.0,NULL
+Nigiri saumon,CRUNCHY FAMILY (janvier_2025),120.0,NULL
+Springroll saumon avocat,CRUNCHY FAMILY (janvier_2025),87.0,NULL
+California surimi,CRUNCHY FAMILY (janvier_2025),88.0,NULL
+Wasa crunch surimi,CRUNCHY FAMILY (janvier_2025),216.0,NULL
+Nigiri saumon,CRUNCHY MAKI (janvier_2025),60.0,NULL
+Wasa crunch surimi,CRUNCHY MAKI (janvier_2025),108.0,NULL
+Maki concombre cheese,CRUNCHY MAKI (janvier_2025),60.0,NULL
+Maki saumon,CRUNCHY MAKI (janvier_2025),60.0,NULL
+Nigiri saumon,DISCOVERY MAXI (janvier_2025),60.0,NULL
+Nigiri thon,DISCOVERY MAXI (janvier_2025),60.0,NULL
+Maki avocat,DISCOVERY MAXI (janvier_2025),60.0,NULL
+Maki saumon,DISCOVERY MAXI (janvier_2025),60.0,NULL
+Wasa crunch surimi,DISCOVERY MAXI (janvier_2025),108.0,NULL
+California saumon,DISCOVERY MAXI (janvier_2025),86.0,NULL
+Nigiri saumon,DISCOVERY MINI (janvier_2025),60.0,NULL
+California saumon,DISCOVERY MINI (janvier_2025),86.0,NULL
+Maki concombre cheese,DISCOVERY MINI (janvier_2025),60.0,NULL
+Riz vinaigré,DONBURI POULET KATSU (janvier_2025),200.0,NULL
+Poulet katsu,DONBURI POULET KATSU (janvier_2025),70.0,NULL
+Salade chou blanc carotte,DONBURI POULET KATSU (janvier_2025),40.0,NULL
+Chou rouge,DONBURI POULET KATSU (janvier_2025),30.0,NULL
+Mayonnaise spicy,DONBURI POULET KATSU (janvier_2025),5.0,SAUCE SRIRACHA SAVEUR MAYO (A) 440ML PET
+Oignon frit,DONBURI POULET KATSU (janvier_2025),2.0,OIGNONS FRITS SANS GLUTEN 500G
+Coriandre,DONBURI POULET KATSU (janvier_2025),1.0,NULL
+Sésame noir et blanc,DONBURI POULET KATSU (janvier_2025),1.0,NULL
+Riz vinaigré,DUO POULET YAKITORI & GYOZA (janvier_2025),170.0,NULL
+Brochettes de poulet,DUO POULET YAKITORI & GYOZA (janvier_2025),60.0,NULL
+Gyoza de poulet pré-grillé,DUO POULET YAKITORI & GYOZA (janvier_2025),40.0,NULL
+Cébette (Topping),DUO POULET YAKITORI & GYOZA (janvier_2025),2.0,NULL
+Sauce Unagi,DUO POULET YAKITORI & GYOZA (janvier_2025),10.0,SAUCE ANGUILLE / UNAGI SAUCE 2KG
+Graine de sésame,DUO POULET YAKITORI & GYOZA (janvier_2025),1.0,NULL
+Nigiri saumon,ESSENTIAL (janvier_2025),60.0,NULL
+Nigiri thon,ESSENTIAL (janvier_2025),60.0,NULL
+California saumon,ESSENTIAL (janvier_2025),129.0,NULL
+Nigiri saumon,FUTO LOVER (janvier_2025),60.0,NULL
+Nigiri thon,FUTO LOVER (janvier_2025),60.0,NULL
+Futo maki veggie,FUTO LOVER (janvier_2025),81.0,NULL
+California thon cuit,FUTO LOVER (janvier_2025),86.0,NULL
+Wasa crunch surimi,FUTO LOVER (janvier_2025),108.0,NULL
+Concombre,FUTO MAKI (janvier_2025),25.0,NULL
+Wasabi,FUTO MAKI (janvier_2025),1.0,NULL
+Algue,FUTO MAKI (janvier_2025),1.0,ALGUE NORI GRILLEE TEMAKI 100 PCS
+Cream cheese,FUTO MAKI (janvier_2025),10.0,NULL
+Gyoza légume,GYOZAS PRÉ GRILLÉ LÉGUMES (janvier_2025),95.0,NULL
+Gyoza poulet,GYOZAS PRÉ GRILLÉ MIXTE (janvier_2025),57.0,NULL
+Gyoza légumes,GYOZAS PRÉ GRILLÉ MIXTE (janvier_2025),38.0,NULL
+Gyoza poulet,GYOZAS PRÉ GRILLÉ POULET (janvier_2025),95.0,GYOZA POULET CURRY - 30 PCS - 600GR
+Nigiri saumon,KYOJIN MINI (janvier_2025),120.0,NULL
+Nigiri thon,KYOJIN MINI (janvier_2025),60.0,NULL
+Nigiri crevette,KYOJIN MINI (janvier_2025),56.0,NULL
+Saumon roll cheese,KYOJIN MINI (janvier_2025),96.0,NULL
+Maki avocat,KYOJIN MINI (janvier_2025),120.0,NULL
+California saumon avocat,KYOJIN MINI (janvier_2025),172.0,NULL
+Wasa crunch surimi,KYOJIN MINI (janvier_2025),108.0,NULL
+Wasa crunch thon cuit,KYOJIN MINI (janvier_2025),110.0,NULL
+Nigiri saumon,KYOJIN WHITE (janvier_2025),120.0,NULL
+Nigiri thon,KYOJIN WHITE (janvier_2025),60.0,NULL
+White ciboulette saumon cheese,KYOJIN WHITE (janvier_2025),144.0,NULL
+White crunch thon cuit,KYOJIN WHITE (janvier_2025),101.0,NULL
+White california thon spicy,KYOJIN WHITE (janvier_2025),100.0,NULL
+White california saumon avocat,KYOJIN WHITE (janvier_2025),95.0,NULL
+White california avocat,KYOJIN WHITE (janvier_2025),80.0,NULL
+White california concombre cheese,KYOJIN WHITE (janvier_2025),88.0,NULL
+White crunch saumon,KYOJIN WHITE (janvier_2025),96.0,NULL
+Nigiri saumon top cheese,LITTLE ALL CHEESE (janvier_2025),64.0,NULL
+California Saumon cheese,LITTLE ALL CHEESE (janvier_2025),64.0,NULL
+Saumon roll cheese,LITTLE ALL CHEESE (janvier_2025),72.0,NULL
+Nigiri saumon wasabi,LITTLE ALL SPICY (janvier_2025),62.0,NULL
+California spicy surimi,LITTLE ALL SPICY (janvier_2025),44.0,NULL
+California spicy saumon,LITTLE ALL SPICY (janvier_2025),64.0,NULL
+Wasacrunch surimi,LITTLE ALL SPICY (janvier_2025),54.0,NULL
+Nigiri saumon,LITTLE ALL WHITE (janvier_2025),60.0,NULL
+White wasa crunch saumon avocat,LITTLE ALL WHITE (janvier_2025),72.0,NULL
+Spring roll saumon mangue avocat,LITTLE ALL WHITE (janvier_2025),69.0,NULL
+Riz vinaigré,MAKI AVOCAT (janvier_2025),95.0,NULL
+Algue,MAKI AVOCAT (janvier_2025),1.0,NULL
+Avocat,MAKI AVOCAT (janvier_2025),25.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Algue 1 1 Algue,MAKI CHEESE (janvier_2025),1.0,NULL
+Algue,MAKI CHEESE (janvier_2025),1.0,ALGUE NORI GRILLEE TEMAKI 100 PCS
+Riz vinaigré 95 Riz vinaigré,MAKI CHEESE (janvier_2025),95.0,NULL
+Riz vinaigré,MAKI CHEESE (janvier_2025),95.0,NULL
+Thon 25 Carotte mariné,MAKI CHEESE (janvier_2025),30.0,NULL
+Cheese,MAKI CHEESE (janvier_2025),20.0,NULL
+Riz vinaigré,MAKI CONCOMBRE CHEESE (janvier_2025),95.0,NULL
+Algue,MAKI CONCOMBRE CHEESE (janvier_2025),1.0,NULL
+Concombre,MAKI CONCOMBRE CHEESE (janvier_2025),15.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Cheese,MAKI CONCOMBRE CHEESE (janvier_2025),10.0,NULL
+Riz vinaigré,MAKI SAUMON (janvier_2025),95.0,NULL
+Algue,MAKI SAUMON (janvier_2025),1.0,ALGUE NORI GRILLEE TEMAKI 100 PCS
+Saumon,MAKI SAUMON (janvier_2025),25.0,NULL
+Saumon roll cheese,MANGO GO (janvier_2025),96.0,NULL
+Spring roll saumon mangue,MANGO GO (janvier_2025),92.0,NULL
+Wasa crunch surimi,MANGO GO (janvier_2025),108.0,NULL
+Nigiri saumon,MANGO GO (janvier_2025),30.0,NULL
+Nigiri thon,MANGO GO (janvier_2025),30.0,NULL
+Mayonnaise,MAYONNAISE SPICY (janvier_2025),160.0,NULL
+Sriracha,MAYONNAISE SPICY (janvier_2025),60.0,NULL
+Nigiri saumon,MEAL FOR TWO (janvier_2025),60.0,NULL
+Nigiri thon,MEAL FOR TWO (janvier_2025),60.0,NULL
+Nigiri crevette,MEAL FOR TWO (janvier_2025),56.0,NULL
+California saumon,MEAL FOR TWO (janvier_2025),86.0,NULL
+Spring roll thon cuit,MEAL FOR TWO (janvier_2025),87.0,NULL
+Saumon roll cheese,MEAL FOR TWO (janvier_2025),96.0,NULL
+Nem porc,NEMS AU PORC (janvier_2025),120.0,NULL
+Nems poulet,NEMS AU POULET (janvier_2025),120.0,NULL
+Nems crevettes,NEMS AUX CREVETTES (janvier_2025),120.0,NULL
+Riz vinaigré,NIGIRI SAUMON (janvier_2025),120.0,NULL
+Saumon,NIGIRI SAUMON (janvier_2025),60.0,NULL
+Riz vinaigré,NIGIRI THON SAUMON (janvier_2025),120.0,NULL
+Saumon,NIGIRI THON SAUMON (janvier_2025),30.0,NULL
+Thon,NIGIRI THON SAUMON (janvier_2025),30.0,NULL
+Saumon roll cheese,NO NORI (janvier_2025),192.0,NULL
+White saumon avocat,NO NORI (janvier_2025),95.0,NULL
+White avocat cheese,NO NORI (janvier_2025),85.0,NULL
+Nouilles Udon Veggie,NOUILLES UDON VEGGIE (janvier_2025),350.0,NULL
+Cébette (Topping),NOUILLES UDON VEGGIE (janvier_2025),2.0,NULL
+Pad Thaï Crevette,PAD THAI CREVETTE (janvier_2025),350.0,NULL
+Cébette (Topping),PAD THAI CREVETTE (janvier_2025),2.0,NULL
+Haricots Mungo,PAD THAI CREVETTE (janvier_2025),2.0,NULL
+Pad Thaï Poulet,PAD THAI POULET (janvier_2025),350.0,NULL
+Cébette (Topping),PAD THAI POULET (janvier_2025),2.0,NULL
+Haricots Mungo,PAD THAI POULET (janvier_2025),2.0,NULL
+Perle de coco,PERLE DE COCO (janvier_2025),90.0,NULL
+Nems porc,PLATEAU ASIAN STREET FOOD (janvier_2025),60.0,NULL
+Samoussa poulet,PLATEAU ASIAN STREET FOOD (janvier_2025),200.0,NULL
+Samoussa légumes,PLATEAU ASIAN STREET FOOD (janvier_2025),200.0,NULL
+Beignets crevette,PLATEAU ASIAN STREET FOOD (janvier_2025),90.0,NULL
+Nigiri saumon,POIDS (janvier_2025),120.0,NULL
+Nigiri thon,POIDS (janvier_2025),60.0,NULL
+Nigiri crevette,POIDS (janvier_2025),56.0,NULL
+Saumon roll cheese,POIDS (janvier_2025),96.0,NULL
+Maki saumon,POIDS (janvier_2025),120.0,NULL
+Maki avocat,POIDS (janvier_2025),120.0,NULL
+California saumon avocat,POIDS (janvier_2025),172.0,NULL
+Wasa crunch surimi,POIDS (janvier_2025),216.0,NULL
+Spring concombre cheese,POIDS (janvier_2025),153.0,NULL
+Spring thon cuit,POIDS (janvier_2025),175.0,NULL
+Riz vinaigré,POKE POULET TEMPURA (janvier_2025),200.0,NULL
+Poulet Tempura,POKE POULET TEMPURA (janvier_2025),65.0,NULL
+Avocat,POKE POULET TEMPURA (janvier_2025),20.0,NULL
+Mangue,POKE POULET TEMPURA (janvier_2025),20.0,NULL
+Chou rouge,POKE POULET TEMPURA (janvier_2025),30.0,NULL
+Cream cheese,POKE POULET TEMPURA (janvier_2025),30.0,NULL
+Fève de soja,POKE POULET TEMPURA (janvier_2025),30.0,NULL
+Ciboulette,POKE POULET TEMPURA (janvier_2025),1.0,NULL
+Oignons Frits,POKE POULET TEMPURA (janvier_2025),2.0,NULL
+Mayonnaise Spicy,POKE POULET TEMPURA (janvier_2025),5.0,SAUCE SRIRACHA SAVEUR MAYO (A) 440ML PET
+Sauce Unagi,POKE POULET TEMPURA (janvier_2025),5.0,NULL
+Riz vinaigré,POKÉ SAUMON (janvier_2025),200.0,NULL
+Saumon mariné,POKÉ SAUMON (janvier_2025),70.0,NULL
+Avocat,POKÉ SAUMON (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Mangue,POKÉ SAUMON (janvier_2025),20.0,NULL
+Chou rouge,POKÉ SAUMON (janvier_2025),30.0,NULL
+Cream cheese,POKÉ SAUMON (janvier_2025),30.0,NULL
+Fève de soja,POKÉ SAUMON (janvier_2025),30.0,NULL
+Graines de sésame,POKÉ SAUMON (janvier_2025),1.0,NULL
+Menthe,POKÉ SAUMON (janvier_2025),1.0,NULL
+Coriandre,POKÉ SAUMON (janvier_2025),1.0,NULL
+Ciboulette,POKÉ SAUMON (janvier_2025),1.0,NULL
+Riz vinaigré,POKE THON SAUMON (janvier_2025),200.0,NULL
+Saumon mariné,POKE THON SAUMON (janvier_2025),35.0,NULL
+Thon mariné,POKE THON SAUMON (janvier_2025),35.0,NULL
+Avocat,POKE THON SAUMON (janvier_2025),20.0,NULL
+Mangue,POKE THON SAUMON (janvier_2025),20.0,NULL
+Chou rouge,POKE THON SAUMON (janvier_2025),30.0,NULL
+Cream cheese,POKE THON SAUMON (janvier_2025),30.0,NULL
+Fève de soja,POKE THON SAUMON (janvier_2025),30.0,NULL
+Sésame,POKE THON SAUMON (janvier_2025),1.0,NULL
+Oignons Frits,POKE THON SAUMON (janvier_2025),2.0,OIGNONS FRITS SANS GLUTEN 500G
+Menthe,POKE THON SAUMON (janvier_2025),1.0,NULL
+Coriandre,POKE THON SAUMON (janvier_2025),1.0,NULL
+Ciboulette,POKE THON SAUMON (janvier_2025),1.0,NULL
+Porc au caramel,PORC AU CARAMEL (janvier_2025),150.0,NULL
+Riz parfumé,PORC AU CARAMEL (janvier_2025),200.0,NULL
+Cébette (Topping),PORC AU CARAMEL (janvier_2025),2.0,NULL
+Poulet aux Basilic,POULET AU BASILIC (janvier_2025),150.0,NULL
+Riz parfumé,POULET AU BASILIC (janvier_2025),200.0,NULL
+Basilic (Topping),POULET AU BASILIC (janvier_2025),1.0,NULL
+Porc au caramel,POULET AU CARAMEL (janvier_2025),150.0,NULL
+Riz parfumé,POULET AU CARAMEL (janvier_2025),200.0,NULL
+Cébette (Topping),POULET AU CARAMEL (janvier_2025),2.0,NULL
+Poulet aux oignons,POULET AUX OIGNONS (janvier_2025),150.0,NULL
+Riz parfumé,POULET AUX OIGNONS (janvier_2025),200.0,NULL
+Cebette (Topping),POULET AUX OIGNONS (janvier_2025),2.0,NULL
+Oignons Frits,POULET AUX OIGNONS (janvier_2025),5.0,NULL
+Poulet au curry,POULET CURRY JAPONAIS (janvier_2025),150.0,NULL
+Riz parfumé,POULET CURRY JAPONAIS (janvier_2025),200.0,NULL
+Cébette (Topping),POULET CURRY JAPONAIS (janvier_2025),2.0,NULL
+Poulet aigre douce,POULET SAUCE AIGRE DOUCE (janvier_2025),150.0,NULL
+Riz parfumé,POULET SAUCE AIGRE DOUCE (janvier_2025),200.0,NULL
+Cébette (Topping),POULET SAUCE AIGRE DOUCE (janvier_2025),2.0,NULL
+Nigiri saumon,PURPLE (janvier_2025),60.0,NULL
+Maki avocat,PURPLE (janvier_2025),60.0,NULL
+Maki concombre cheese,PURPLE (janvier_2025),60.0,NULL
+Spring roll violet surimi,PURPLE (janvier_2025),52.0,NULL
+Wasa crunch thon cuit,PURPLE (janvier_2025),55.0,NULL
+Riz vinaigré,RIZ & BROCHETTE YAKITORI BŒUF FROMAGE (janvier_2025),170.0,NULL
+Bœuf au fromage,RIZ & BROCHETTE YAKITORI BŒUF FROMAGE (janvier_2025),93.0,NULL
+Sauce unagi,RIZ & BROCHETTE YAKITORI BŒUF FROMAGE (janvier_2025),8.0,SAUCE ANGUILLE / UNAGI SAUCE 2KG
+Sésame noir et blanc,RIZ & BROCHETTE YAKITORI BŒUF FROMAGE (janvier_2025),1.0,NULL
+Riz vinaigré,RIZ & BROCHETTE YAKITORI POULET MARINÉ (janvier_2025),170.0,NULL
+Poulet yakitori,RIZ & BROCHETTE YAKITORI POULET MARINÉ (janvier_2025),90.0,BROCHETTES POULET YAKITORI 40G X25
+Sauce unagi,RIZ & BROCHETTE YAKITORI POULET MARINÉ (janvier_2025),8.0,NULL
+Sésame noir et blanc,RIZ & BROCHETTE YAKITORI POULET MARINÉ (janvier_2025),1.0,NULL
+Riz cantonais,RIZ CANTONAIS (janvier_2025),350.0,NULL
+Ciboulette (Topping),RIZ CANTONAIS (janvier_2025),1.0,NULL
+Nigiri saumon,ROLL N’ SUSHI (janvier_2025),30.0,NULL
+Nigiri thon,ROLL N’ SUSHI (janvier_2025),30.0,NULL
+Wasa crunch Thon cuit,ROLL N’ SUSHI (janvier_2025),110.0,NULL
+Saumon roll cheese,ROLL N’ SUSHI (janvier_2025),96.0,NULL
+Galette de riz,ROULEAUX DE PRINTEMPS POULET (janvier_2025),32.0,NULL
+Laitue,ROULEAUX DE PRINTEMPS POULET (janvier_2025),10.0,NULL
+Haricot Mungo,ROULEAUX DE PRINTEMPS POULET (janvier_2025),20.0,VERMICELLES DE HARICOT MUNGO 1KG
+Carotte,ROULEAUX DE PRINTEMPS POULET (janvier_2025),20.0,NULL
+Salade iceberg,ROULEAUX DE PRINTEMPS POULET (janvier_2025),20.0,NULL
+Poulet mariné teriyaki,ROULEAUX DE PRINTEMPS POULET (janvier_2025),50.0,NULL
+Menthe,ROULEAUX DE PRINTEMPS POULET (janvier_2025),2.0,NULL
+Coriandre,ROULEAUX DE PRINTEMPS POULET (janvier_2025),2.0,NULL
+Vermicelle de riz,ROULEAUX DE PRINTEMPS POULET (janvier_2025),60.0,NULL
+Galette de riz,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),32.0,GALETTE DE RIZ CARREE LION BRAND 19CM (400g x50)
+Laitue,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),10.0,NULL
+Haricot Mungo,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),20.0,NULL
+Carotte,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),20.0,NULL
+Salade iceberg,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),20.0,NULL
+Poulet mariné teriyaki,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),20.0,NULL
+Crevette,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),32.0,NULL
+Menthe,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),2.0,NULL
+Coriandre,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),2.0,NULL
+Vermicelle de riz,ROULEAUX DE PRINTEMPS POULET CREVETTE (janvier_2025),60.0,NULL
+Galette de riz,ROULEAUX DE PRINTEMPS VEGGIE (janvier_2025),32.0,NULL
+Laitue,ROULEAUX DE PRINTEMPS VEGGIE (janvier_2025),10.0,NULL
+Haricot Mungo,ROULEAUX DE PRINTEMPS VEGGIE (janvier_2025),20.0,VERMICELLES DE HARICOT MUNGO 1KG
+Carotte,ROULEAUX DE PRINTEMPS VEGGIE (janvier_2025),20.0,NULL
+Salade iceberg,ROULEAUX DE PRINTEMPS VEGGIE (janvier_2025),20.0,NULL
+Chou rouge,ROULEAUX DE PRINTEMPS VEGGIE (janvier_2025),20.0,NULL
+Menthe,ROULEAUX DE PRINTEMPS VEGGIE (janvier_2025),2.0,NULL
+Coriandre,ROULEAUX DE PRINTEMPS VEGGIE (janvier_2025),2.0,NULL
+Vermicelle de riz,ROULEAUX DE PRINTEMPS VEGGIE (janvier_2025),60.0,NULL
+Salade de chou,SALADE DE CHOU (janvier_2025),130.0,NULL
+Graines de sésame,SALADE DE CHOU (janvier_2025),1.0,NULL
+Salade iceberg,SALADE THAI (janvier_2025),30.0,NULL
+Carotte râpée,SALADE THAI (janvier_2025),30.0,NULL
+Haricot mungo,SALADE THAI (janvier_2025),30.0,VERMICELLES DE HARICOT MUNGO 1KG
+Menthe,SALADE THAI (janvier_2025),1.0,NULL
+Coriandre,SALADE THAI (janvier_2025),1.0,NULL
+Mangue,SALADE THAI (janvier_2025),50.0,NULL
+Poulet mariné teriyaki,SALADE THAI (janvier_2025),40.0,NULL
+Crevette,SALADE THAI (janvier_2025),16.0,NULL
+Vermicelle,SALADE THAI (janvier_2025),50.0,NULL
+Riz vinaigré,SALMON BOWL (janvier_2025),100.0,NULL
+Saumon mariné,SALMON BOWL (janvier_2025),30.0,NULL
+Avocat,SALMON BOWL (janvier_2025),30.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Cream cheese,SALMON BOWL (janvier_2025),30.0,NULL
+Graines de sésame,SALMON BOWL (janvier_2025),1.0,NULL
+Menthe,SALMON BOWL (janvier_2025),1.0,NULL
+Coriandre,SALMON BOWL (janvier_2025),1.0,NULL
+Ciboulette,SALMON BOWL (janvier_2025),1.0,NULL
+Oignons Frits,SALMON BOWL (janvier_2025),1.0,OIGNONS FRITS SANS GLUTEN 500G
+Saumon roll cheese,SALMON LOVER (janvier_2025),96.0,NULL
+White saumon avocat,SALMON LOVER (janvier_2025),95.0,NULL
+Maki saumon,SALMON LOVER (janvier_2025),60.0,NULL
+Springroll saumon avocat,SALMON LOVER (janvier_2025),87.0,NULL
+California saumon avocat,SALMON LOVER (janvier_2025),86.0,NULL
+Samoussa poulet,SAMOUSSA AU POULET (janvier_2025),200.0,NULL
+Samoussa légume,SAMOUSSA AUX LÉGUMES (janvier_2025),200.0,NULL
+Nigiri saumon,SANDO N’ CO (janvier_2025),60.0,NULL
+Maki saumon,SANDO N’ CO (janvier_2025),30.0,NULL
+California saumon,SANDO N’ CO (janvier_2025),43.0,NULL
+Wasa club thon cuit,SANDO N’ CO (janvier_2025),91.0,NULL
+Wasa crunch saumon,SANDO N’ CO (janvier_2025),52.0,NULL
+Saumon,SASHIMI SAUMON (janvier_2025),180.0,NULL
+Saumon,SASHIMI THON SAUMON (janvier_2025),90.0,NULL
+Thon,SASHIMI THON SAUMON (janvier_2025),90.0,NULL
+Riz vinaigré,SAUMON ROLL CHEESE (janvier_2025),105.0,NULL
+Saumon,SAUMON ROLL CHEESE (janvier_2025),24.0,NULL
+Cheese,SAUMON ROLL CHEESE (janvier_2025),15.0,NULL
+Riz vinaigré,SPRINGROLL CONCOMBRE CHEESE (janvier_2025),110.0,NULL
+Galette de riz,SPRINGROLL CONCOMBRE CHEESE (janvier_2025),8.0,GALETTE DE RIZ CARREE LION BRAND 19CM (400g x50)
+Salade,SPRINGROLL CONCOMBRE CHEESE (janvier_2025),5.0,NULL
+Cheese,SPRINGROLL CONCOMBRE CHEESE (janvier_2025),20.0,NULL
+Concombre,SPRINGROLL CONCOMBRE CHEESE (janvier_2025),10.0,NULL
+Riz vinaigré,SPRINGROLL SAUMON AVOCAT (janvier_2025),110.0,NULL
+Galette de riz,SPRINGROLL SAUMON AVOCAT (janvier_2025),8.0,NULL
+Salade,SPRINGROLL SAUMON AVOCAT (janvier_2025),5.0,NULL
+Menthe,SPRINGROLL SAUMON AVOCAT (janvier_2025),1.0,NULL
+Coriandre,SPRINGROLL SAUMON AVOCAT (janvier_2025),1.0,NULL
+Saumon,SPRINGROLL SAUMON AVOCAT (janvier_2025),20.0,NULL
+Avocat,SPRINGROLL SAUMON AVOCAT (janvier_2025),20.0,NULL
+Concombre,SPRINGROLL SAUMON AVOCAT (janvier_2025),10.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Riz vinaigré,SPRINGROLL SAUMON CHEESE (janvier_2025),110.0,NULL
+Galette de riz,SPRINGROLL SAUMON CHEESE (janvier_2025),8.0,GALETTE DE RIZ CARREE LION BRAND 19CM (400g x50)
+Salade,SPRINGROLL SAUMON CHEESE (janvier_2025),5.0,NULL
+Saumon,SPRINGROLL SAUMON CHEESE (janvier_2025),20.0,NULL
+Cheese,SPRINGROLL SAUMON CHEESE (janvier_2025),20.0,NULL
+Concombre,SPRINGROLL SAUMON CHEESE (janvier_2025),10.0,NULL
+Riz vinaigré,SPRINGROLL SAUMON MANGUE AVOCAT (janvier_2025),110.0,NULL
+Galette de riz,SPRINGROLL SAUMON MANGUE AVOCAT (janvier_2025),8.0,NULL
+Salade,SPRINGROLL SAUMON MANGUE AVOCAT (janvier_2025),5.0,NULL
+Saumon,SPRINGROLL SAUMON MANGUE AVOCAT (janvier_2025),20.0,NULL
+Mangue,SPRINGROLL SAUMON MANGUE AVOCAT (janvier_2025),10.0,NULL
+Avocat,SPRINGROLL SAUMON MANGUE AVOCAT (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Concombre,SPRINGROLL SAUMON MANGUE AVOCAT (janvier_2025),10.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Coriandre,SPRINGROLL SAUMON MANGUE AVOCAT (janvier_2025),1.0,NULL
+Menthe,SPRINGROLL SAUMON MANGUE AVOCAT (janvier_2025),1.0,NULL
+Riz vinaigré,SPRINGROLL SURIMI VIOLET (janvier_2025),110.0,NULL
+Galette de riz,SPRINGROLL SURIMI VIOLET (janvier_2025),8.0,GALETTE DE RIZ CARREE LION BRAND 19CM (400g x50)
+Chou rouge,SPRINGROLL SURIMI VIOLET (janvier_2025),20.0,NULL
+Salade,SPRINGROLL SURIMI VIOLET (janvier_2025),5.0,NULL
+Avocat,SPRINGROLL SURIMI VIOLET (janvier_2025),20.0,NULL
+Concombre,SPRINGROLL SURIMI VIOLET (janvier_2025),10.0,NULL
+Carotte,SPRINGROLL SURIMI VIOLET (janvier_2025),10.0,NULL
+Surimi Mayo,SPRINGROLL SURIMI VIOLET (janvier_2025),25.0,NULL
+Menthe,SPRINGROLL SURIMI VIOLET (janvier_2025),1.0,NULL
+Coriandre,SPRINGROLL SURIMI VIOLET (janvier_2025),1.0,NULL
+Riz vinaigré,SPRINGROLL THON CUIT MAYO (janvier_2025),110.0,NULL
+Galette de riz,SPRINGROLL THON CUIT MAYO (janvier_2025),8.0,NULL
+Salade,SPRINGROLL THON CUIT MAYO (janvier_2025),5.0,NULL
+Thon cuit mayonnaise,SPRINGROLL THON CUIT MAYO (janvier_2025),30.0,NULL
+Avocat,SPRINGROLL THON CUIT MAYO (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Menthe,SPRINGROLL THON CUIT MAYO (janvier_2025),1.0,NULL
+Coriandre,SPRINGROLL THON CUIT MAYO (janvier_2025),1.0,NULL
+Riz vinaigré,SPRINGROLL VEGGIE (janvier_2025),110.0,NULL
+Galette de riz,SPRINGROLL VEGGIE (janvier_2025),8.0,GALETTE DE RIZ CARREE LION BRAND 19CM (400g x50)
+Salade,SPRINGROLL VEGGIE (janvier_2025),5.0,NULL
+Chou rouge mariné au vinaigre js alpha,SPRINGROLL VEGGIE (janvier_2025),20.0,NULL
+Avocat,SPRINGROLL VEGGIE (janvier_2025),20.0,NULL
+Mayo,SPRINGROLL VEGGIE (janvier_2025),10.0,SAUCE SRIRACHA SAVEUR MAYO (A) 440ML PET
+Mayonnaise,SURIMI MAYONNAISE (janvier_2025),180.0,NULL
+Nigiri saumon,SUSHI LOVER (janvier_2025),60.0,NULL
+Nigiri thon,SUSHI LOVER (janvier_2025),30.0,NULL
+Nigiri crevette,SUSHI LOVER (janvier_2025),28.0,NULL
+Maki avocat,SUSHI LOVER (janvier_2025),60.0,NULL
+Maki saumon,SUSHI LOVER (janvier_2025),60.0,NULL
+Wasa crunch thon cuit,SUSHI LOVER (janvier_2025),110.0,NULL
+Saumon roll cheese,SUSHI LOVER (janvier_2025),96.0,NULL
+Riz vinaigré,TARTARE SAUMON (janvier_2025),200.0,NULL
+Sauce unagi,TARTARE SAUMON (janvier_2025),10.0,SAUCE ANGUILLE / UNAGI SAUCE 2KG
+Saumon,TARTARE SAUMON (janvier_2025),90.0,NULL
+Avocat,TARTARE SAUMON (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Graines de sésame,TARTARE SAUMON (janvier_2025),1.0,NULL
+Menthe,TARTARE SAUMON (janvier_2025),1.0,NULL
+Coriandre,TARTARE SAUMON (janvier_2025),1.0,NULL
+Citron,TARTARE SAUMON (janvier_2025),20.0,NULL
+Nigiri saumon,TASTING DUO (janvier_2025),60.0,NULL
+California spicy saumon,TASTING DUO (janvier_2025),86.0,NULL
+Maki saumon,TASTING DUO (janvier_2025),60.0,NULL
+Wasa crunch saumon,TASTING DUO (janvier_2025),105.0,NULL
+Springroll saumon avocat,TASTING DUO (janvier_2025),87.0,NULL
+Nigiri saumon,TASTING SOLO (janvier_2025),60.0,NULL
+Nigiri thon,TASTING SOLO (janvier_2025),30.0,NULL
+California saumon avocat,TASTING SOLO (janvier_2025),86.0,NULL
+Maki concombre cheese,TASTING SOLO (janvier_2025),60.0,NULL
+Springroll thon cuit,TASTING SOLO (janvier_2025),87.0,NULL
+Nigiri saumon,THE BOX (janvier_2025),180.0,NULL
+California saumon avocat,THE BOX (janvier_2025),129.0,NULL
+Mayonnaise,THON CUIT MAYONNAISE (janvier_2025),160.0,NULL
+Thon cuit,THON CUIT MAYONNAISE (janvier_2025),210.0,NULL
+Nouilles FOODEX,WAKISOBA EBI FRY (janvier_2025),255.0,NULL
+Crevettes Ebi Fry,WAKISOBA EBI FRY (janvier_2025),50.0,NULL
+Cébettes,WAKISOBA EBI FRY (janvier_2025),10.0,NULL
+Nouilles FOODEX,WAKISOBA POULET KATSU (janvier_2025),255.0,NULL
+Poulet Katsu,WAKISOBA POULET KATSU (janvier_2025),70.0,NULL
+Cébettes,WAKISOBA POULET KATSU (janvier_2025),10.0,NULL
+Wasa Club Saumon,WASA CLUB (janvier_2025),193.0,NULL
+Wasa Club Thon cuit,WASA CLUB (janvier_2025),182.0,NULL
+140g de riz et 1g de sésame. natte de bambou. couper en 8. saumon 4 pièces et thon cuit,WASA CLUB (janvier_2025),4.0,NULL
+Riz vinaigré,WASA CRUNCH POULET TEMPURA (janvier_2025),120.0,NULL
+Algue nori,WASA CRUNCH POULET TEMPURA (janvier_2025),1.0,NULL
+Concombre,WASA CRUNCH POULET TEMPURA (janvier_2025),15.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Poulet pané,WASA CRUNCH POULET TEMPURA (janvier_2025),25.0,NULL
+Mayonnaise spicy,WASA CRUNCH POULET TEMPURA (janvier_2025),10.0,NULL
+Sauce unagi,WASA CRUNCH POULET TEMPURA (janvier_2025),10.0,NULL
+Oignons frits,WASA CRUNCH POULET TEMPURA (janvier_2025),20.0,NULL
+Riz vinaigré,WASA CRUNCH SAUMON (janvier_2025),120.0,NULL
+Algue nori,WASA CRUNCH SAUMON (janvier_2025),1.0,ALGUE NORI GRILLEE TEMAKI 100 PCS
+Saumon,WASA CRUNCH SAUMON (janvier_2025),20.0,NULL
+Avocat,WASA CRUNCH SAUMON (janvier_2025),20.0,NULL
+Concombre,WASA CRUNCH SAUMON (janvier_2025),10.0,NULL
+Mayonnaise spicy,WASA CRUNCH SAUMON (janvier_2025),10.0,SAUCE SRIRACHA SAVEUR MAYO (A) 440ML PET
+Sauce unagi,WASA CRUNCH SAUMON (janvier_2025),10.0,SAUCE ANGUILLE / UNAGI SAUCE 2KG
+Oignons frits,WASA CRUNCH SAUMON (janvier_2025),20.0,OIGNONS FRITS SANS GLUTEN 500G
+Riz vinaigré,WASA CRUNCH SURIMI (janvier_2025),120.0,NULL
+Algue nori,WASA CRUNCH SURIMI (janvier_2025),1.0,NULL
+Surimi mayonnaise,WASA CRUNCH SURIMI (janvier_2025),25.0,NULL
+Concombre,WASA CRUNCH SURIMI (janvier_2025),10.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Avocat,WASA CRUNCH SURIMI (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Mayonnaise spicy,WASA CRUNCH SURIMI (janvier_2025),10.0,NULL
+Sauce unagi,WASA CRUNCH SURIMI (janvier_2025),10.0,NULL
+Oignons frits,WASA CRUNCH SURIMI (janvier_2025),20.0,NULL
+Riz vinaigré,WASA CRUNCH THON CUIT MAYO (janvier_2025),120.0,NULL
+Algue nori,WASA CRUNCH THON CUIT MAYO (janvier_2025),1.0,ALGUE NORI GRILLEE TEMAKI 100 PCS
+Concombre,WASA CRUNCH THON CUIT MAYO (janvier_2025),10.0,NULL
+Avocat,WASA CRUNCH THON CUIT MAYO (janvier_2025),20.0,NULL
+Thon cuit mayonnaise,WASA CRUNCH THON CUIT MAYO (janvier_2025),30.0,NULL
+Mayonnaise spicy,WASA CRUNCH THON CUIT MAYO (janvier_2025),10.0,SAUCE SRIRACHA SAVEUR MAYO (A) 440ML PET
+Sauce unagi,WASA CRUNCH THON CUIT MAYO (janvier_2025),10.0,SAUCE ANGUILLE / UNAGI SAUCE 2KG
+Oignons frits,WASA CRUNCH THON CUIT MAYO (janvier_2025),20.0,OIGNONS FRITS SANS GLUTEN 500G
+Onigiri Saumon cheese,WASA ONIGIRI SAUMON CHEESE (janvier_2025),146.0,NULL
+Pour,WASA ONIGIRI SAUMON CHEESE (janvier_2025),1.0,NULL
+Onigiri Thon Mayo Avocat,WASA ONIGIRI THON MAYO (janvier_2025),152.0,NULL
+Pour,WASA ONIGIRI THON MAYO (janvier_2025),1.0,NULL
+Ramen surgelé,WASA RAMEN BŒUF (janvier_2025),175.0,NULL
+Poireaux,WASA RAMEN BŒUF (janvier_2025),15.0,NULL
+Boeuf basilic,WASA RAMEN BŒUF (janvier_2025),50.0,NULL
+Ramen surgelé,WASA RAMEN EBI FRY (janvier_2025),175.0,NULL
+Crevette Ebi Fry,WASA RAMEN EBI FRY (janvier_2025),50.0,NULL
+Poireaux,WASA RAMEN EBI FRY (janvier_2025),15.0,NULL
+Ramen surgelé,WASA RAMEN GYOZA AUX LÉGUMES (janvier_2025),174.0,NULL
+Gyoza veggie,WASA RAMEN GYOZA AUX LÉGUMES (janvier_2025),57.0,NULL
+Poireaux,WASA RAMEN GYOZA AUX LÉGUMES (janvier_2025),15.0,NULL
+Ramen surgelé,WASA RAMEN POULET KATSU (janvier_2025),175.0,NULL
+Poireaux,WASA RAMEN POULET KATSU (janvier_2025),15.0,NULL
+Laitue,WASA ROLL SAUMON (janvier_2025),5.0,NULL
+Galette de riz,WASA ROLL SAUMON (janvier_2025),8.0,NULL
+Riz,WASA ROLL SAUMON (janvier_2025),120.0,NULL
+Saumon,WASA ROLL SAUMON (janvier_2025),25.0,NULL
+Avocat,WASA ROLL SAUMON (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Concombre,WASA ROLL SAUMON (janvier_2025),10.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Carotte,WASA ROLL SAUMON (janvier_2025),10.0,NULL
+Mangue,WASA ROLL SAUMON (janvier_2025),10.0,NULL
+Menthe,WASA ROLL SAUMON (janvier_2025),1.0,NULL
+Coriandre,WASA ROLL SAUMON (janvier_2025),1.0,NULL
+Laitue,WASA ROLL THON CUIT MAYO (janvier_2025),5.0,NULL
+Galette de riz,WASA ROLL THON CUIT MAYO (janvier_2025),8.0,GALETTE DE RIZ CARREE LION BRAND 19CM (400g x50)
+Riz,WASA ROLL THON CUIT MAYO (janvier_2025),120.0,NULL
+Thon cuit mayo,WASA ROLL THON CUIT MAYO (janvier_2025),30.0,NULL
+Avocat,WASA ROLL THON CUIT MAYO (janvier_2025),20.0,NULL
+Concombre,WASA ROLL THON CUIT MAYO (janvier_2025),10.0,NULL
+Cream cheese,WASA ROLL THON CUIT MAYO (janvier_2025),10.0,NULL
+Carotte,WASA ROLL THON CUIT MAYO (janvier_2025),10.0,NULL
+Menthe,WASA ROLL THON CUIT MAYO (janvier_2025),1.0,NULL
+Coriandre,WASA ROLL THON CUIT MAYO (janvier_2025),1.0,NULL
+Salade de chou,WASABI BENTO – PERLE DE COCO (janvier_2025),50.0,NULL
+California saumon avocat,WASABI BENTO – PERLE DE COCO (janvier_2025),125.0,NULL
+Maki concombre cheese,WASABI BENTO – PERLE DE COCO (janvier_2025),60.0,NULL
+Nigiri saumon,WASABI BENTO – PERLE DE COCO (janvier_2025),60.0,NULL
+Perle de coco,WASABI BENTO – PERLE DE COCO (janvier_2025),45.0,NULL
+Riz vinaigré,WASABI YAKITORI MIX (janvier_2025),280.0,NULL
+Bœuf au fromage,WASABI YAKITORI MIX (janvier_2025),93.0,NULL
+Poulet Yakitori,WASABI YAKITORI MIX (janvier_2025),90.0,BROCHETTES POULET YAKITORI 40G X25
+Sauce unagi,WASABI YAKITORI MIX (janvier_2025),16.0,NULL
+Sésame noir et blanc,WASABI YAKITORI MIX (janvier_2025),1.0,NULL
+Carotte,WHITE AVOCAT CHEESE (janvier_2025),10.0,NULL
+Graines de sésame 1 Avocat,WHITE AVOCAT CHEESE (janvier_2025),20.0,NULL
+Riz vinaigré,WHITE AVOCAT CHEESE (janvier_2025),140.0,NULL
+Avocat,WHITE AVOCAT CHEESE (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Cream cheese,WHITE AVOCAT CHEESE (janvier_2025),10.0,NULL
+Graines de sésame,WHITE AVOCAT CHEESE (janvier_2025),1.0,NULL
+Riz vinaigré,WHITE CIBOULETTE SAUMON CHEESE (janvier_2025),140.0,NULL
+Saumon,WHITE CIBOULETTE SAUMON CHEESE (janvier_2025),20.0,NULL
+Cheese,WHITE CIBOULETTE SAUMON CHEESE (janvier_2025),20.0,NULL
+Concombre,WHITE CIBOULETTE SAUMON CHEESE (janvier_2025),10.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Ciboulette,WHITE CIBOULETTE SAUMON CHEESE (janvier_2025),2.0,NULL
+Riz vinaigré,WHITE SAUMON AVOCAT (janvier_2025),140.0,NULL
+Saumon,WHITE SAUMON AVOCAT (janvier_2025),20.0,NULL
+Avocat,WHITE SAUMON AVOCAT (janvier_2025),20.0,NULL
+Concombre,WHITE SAUMON AVOCAT (janvier_2025),10.0,NULL
+Sésame,WHITE SAUMON AVOCAT (janvier_2025),1.0,FEUILLE DE SOJA AU SÉSAME 20PCS
+Riz vinaigré,WHITE THON SPICY (janvier_2025),140.0,NULL
+Thon,WHITE THON SPICY (janvier_2025),20.0,NULL
+Mayo spicy,WHITE THON SPICY (janvier_2025),10.0,NULL
+Avocat,WHITE THON SPICY (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Concombre,WHITE THON SPICY (janvier_2025),10.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Shichimi,WHITE THON SPICY (janvier_2025),1.0,MELANGE 7 EPICES / SHICHIMI TOGARASHI 300g
+Riz vinaigré,WHITE WASACRUNCH SAUMON AVOCAT (janvier_2025),140.0,NULL
+Saumon,WHITE WASACRUNCH SAUMON AVOCAT (janvier_2025),20.0,NULL
+Avocat,WHITE WASACRUNCH SAUMON AVOCAT (janvier_2025),20.0,NULL
+Concombre,WHITE WASACRUNCH SAUMON AVOCAT (janvier_2025),10.0,NULL
+Oignons frits,WHITE WASACRUNCH SAUMON AVOCAT (janvier_2025),2.0,NULL
+Sésame,WHITE WASACRUNCH SAUMON AVOCAT (janvier_2025),1.0,NULL
+Riz vinaigré,WHITE WASACRUNCH THON CUIT (janvier_2025),140.0,NULL
+Thon cuit mayonnaise,WHITE WASACRUNCH THON CUIT (janvier_2025),30.0,NULL
+Avocat,WHITE WASACRUNCH THON CUIT (janvier_2025),20.0,PUREE AVEC MORCEAUX D’AVOCAT 1KG
+Concombre,WHITE WASACRUNCH THON CUIT (janvier_2025),10.0,SHIBAZUKE CONCOMBRE MARINÉ 1KG
+Oignons frits,WHITE WASACRUNCH THON CUIT (janvier_2025),2.0,OIGNONS FRITS SANS GLUTEN 500G
+Sésame,WHITE WASACRUNCH THON CUIT (janvier_2025),1.0,FEUILLE DE SOJA AU SÉSAME 20PCS

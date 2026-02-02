@@ -10,3 +10,8 @@ pytest==8.3.4
 pytest-asyncio==0.24.0
 httpx==0.28.1
 testcontainers[postgresql]==4.9.0
+
+# ML (prévision ventes)
+pandas==2.2.3
+numpy==1.26.4
+xgboost==2.1.3

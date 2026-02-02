@@ -1,0 +1,16 @@
+{
+  "model_type": "xgboost",
+  "features": [
+    "dow",
+    "weekend",
+    "day",
+    "month",
+    "magasin_cat",
+    "menu_cat",
+    "lag_1",
+    "lag_7",
+    "prix"
+  ],
+  "target": "qte",
+  "mae": 0.6264143562316896
+}

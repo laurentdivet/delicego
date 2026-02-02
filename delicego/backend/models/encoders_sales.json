@@ -1,0 +1,25 @@
+{
+  "magasin_to_code": {
+    "Carrefour Market Auguste-Comté": 0,
+    "Carrefour Market Prigonrieux": 1,
+    "Intermarché Verrouille": 2
+  },
+  "menu_to_code": {
+    "California Saumon Avocat": 0,
+    "Nouilles Udon Veggie": 1,
+    "Perle de coco (x1)": 2,
+    "Ramen Poulet": 3,
+    "Riz Cantonais": 4
+  },
+  "features": [
+    "dow",
+    "weekend",
+    "day",
+    "month",
+    "magasin_cat",
+    "menu_cat",
+    "lag_1",
+    "lag_7"
+  ],
+  "target": "qte"
+}

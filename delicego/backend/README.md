@@ -1,5 +1,36 @@
 # DéliceGo — Backend
 
+## CI / Reproductibilité (migrations + seed)
+
+La CI GitHub Actions vise à garantir qu'une DB vide est reproductible via:
+
+1) `alembic upgrade head` (pas de downgrade en CI)
+2) Checks Postgres:
+   - `information_schema.columns` : 0 colonnes `USER-DEFINED`
+   - `pg_type` (schema public) : 0 enums natifs
+3) `python -m scripts.seed_all --apply` (doit fonctionner **sans XLSX**)
+
+### Commandes locales équivalentes
+
+Pré-requis: Postgres local, une DB vide nommée `delicego`.
+
+```bash
+export DATABASE_URL='postgresql+asyncpg://delicego:delicego@localhost:5432/delicego'
+
+# (optionnel) créer la DB si besoin
+createdb -h localhost -p 5432 -U delicego delicego
+
+cd backend
+pip install -r requirements.txt
+
+# Validations CI (migrations + checks + seed)
+python -m scripts.ci_validate
+```
+
+Notes:
+- La CI est en "Solution 2": aucun ENUM PostgreSQL natif attendu.
+- La migration `zzzz` n'est pas downgradable => aucun downgrade n'est exécuté en CI.
+
 ## Prévisions (pipeline ML ventes → besoins ingrédients)
 
 Le backend inclut un pipeline ML simple (XGBoost) qui :

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 from uuid import uuid4
 
-from sqlalchemy import Date, DateTime, ForeignKey, Index, Text
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,6 +17,15 @@ class PredictionVente(ModeleHorodate):
     """
 
     __tablename__ = "prediction_vente"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "magasin_id",
+            "menu_id",
+            "date_jour",
+            name="uq_prediction_vente_magasin_menu_jour",
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
 
