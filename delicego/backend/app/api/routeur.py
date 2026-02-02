@@ -16,7 +16,10 @@ from app.api.endpoints.dashboard_fournisseurs import routeur_dashboard_fournisse
 from app.api.endpoints.dashboard_production_stock import routeur_dashboard_production_stock_interne
 from app.api.endpoints.kpis import routeur_kpis_interne
 from app.api.endpoints.prevision_ventes import routeur_prevision_ventes_interne
+from app.api.endpoints.previsions_besoins import routeur_previsions_besoins_interne
+from app.api.endpoints.previsions_alertes import routeur_previsions_alertes_interne
 from app.api.endpoints.analytics import routeur_analytics
+from app.api.endpoints.production_jour import routeur_production_jour_interne
 
 # ===== Endpoints client =====
 from app.api.endpoints.commande_client import routeur_commande_client
@@ -53,6 +56,9 @@ routeur_interne.include_router(routeur_dashboard_fournisseurs_interne)
 routeur_interne.include_router(routeur_dashboard_production_stock_interne)
 routeur_interne.include_router(routeur_kpis_interne)
 routeur_interne.include_router(routeur_prevision_ventes_interne)
+routeur_interne.include_router(routeur_previsions_besoins_interne)
+routeur_interne.include_router(routeur_previsions_alertes_interne)
+routeur_interne.include_router(routeur_production_jour_interne)
 
 router.include_router(routeur_interne)
 

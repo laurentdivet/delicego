@@ -5,6 +5,7 @@ On ne met aucune logique métier ici : uniquement la structure des tables.
 
 from app.domaine.modeles.base import BaseModele, ModeleHorodate
 from app.domaine.modeles.referentiel import Fournisseur, Ingredient, LigneRecette, Magasin, Menu, Recette, Utilisateur
+from app.domaine.modeles.prediction_vente import PredictionVente
 from app.domaine.modeles.auth import Role, User, UserRole
 from app.domaine.modeles.audit import AuditLog
 from app.domaine.modeles.stock_tracabilite import Lot, MouvementStock
@@ -50,6 +51,7 @@ __all__ = [
     "Menu",
     "Recette",
     "LigneRecette",
+    "PredictionVente",
     # Stock & traçabilité
     "Lot",
     "MouvementStock",

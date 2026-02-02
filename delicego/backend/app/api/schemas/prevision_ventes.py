@@ -5,6 +5,20 @@ from datetime import date
 from pydantic import BaseModel
 
 
+# ==============================================================
+# NOTE PRODUIT
+# - Prévisions API = table `prediction_vente` (pipeline ML)
+# - `LignePrevision` = planification interne historique (concept différent)
+# ==============================================================
+
+
+class PredictionVenteOut(BaseModel):
+    magasin_id: str
+    menu_id: str
+    quantite_predite: float
+    source: str = "ml"
+
+
 class PointHoraireVentes(BaseModel):
     heure: int  # 0-23
 
@@ -48,25 +62,5 @@ class FiabiliteModele(BaseModel):
 
 
 class ReponsePrevisionVentes(BaseModel):
-    magasin_id: str | None = None
     date_cible: date
-
-    # Synthèse
-    ca_prevu: float
-    ca_reel: float
-    ecart_ca: float
-
-    quantite_prevue: float
-    quantite_reelle: float
-    ecart_quantite: float
-
-    fiabilite: FiabiliteModele
-
-    # Détails clés
-    courbe_horaire: list[PointHoraireVentes]
-    table_produits: list[LignePrevisionProduit]
-
-    facteurs: dict[str, bool] = {
-        "meteo_active": False,
-        "jour_ferie_active": False,
-    }
+    predictions: list[PredictionVenteOut]

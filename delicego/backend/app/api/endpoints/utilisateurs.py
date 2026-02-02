@@ -7,7 +7,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependances import fournir_session
-from app.api.dependances_auth import verifier_roles_requis
+from app.api.dependances_auth import verifier_roles_requis_legacy
 from app.api.schemas.auth import UserCreation, UserLecture, UserMiseAJour
 from app.core.securite import hasher_mot_de_passe
 from app.domaine.modeles.auth import Role, User, UserRole
@@ -16,7 +16,7 @@ from app.domaine.modeles.auth import Role, User, UserRole
 routeur_utilisateurs = APIRouter(
     prefix="/api/interne/utilisateurs",
     tags=["utilisateurs_interne"],
-    dependencies=[Depends(verifier_roles_requis("manager"))],
+    dependencies=[Depends(verifier_roles_requis_legacy("admin", "manager", "operateur", "employe"))],
 )
 
 

@@ -4,6 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependances import fournir_session, verifier_acces_interne
+from app.api.dependances_auth import (
+    fournir_roles_utilisateur,
+    verifier_authentifie,
+    verifier_roles_requis_legacy,
+)
 from app.api.schemas.production_reelle import ReponseBesoins, ReponsePlanReel, RequetePlanReel
 from app.domaine.services.production_reelle import ErreurProductionReelle, ServiceProductionReelle
 
@@ -11,7 +16,12 @@ from app.domaine.services.production_reelle import ErreurProductionReelle, Servi
 routeur_production_reelle_interne = APIRouter(
     prefix="/production",
     tags=["production_interne"],
-    dependencies=[Depends(verifier_acces_interne)],
+    dependencies=[
+        Depends(verifier_acces_interne),
+        Depends(verifier_authentifie),
+        # operateur: lecture besoins uniquement
+        Depends(verifier_roles_requis_legacy("admin", "operateur")),
+    ],
 )
 
 
@@ -23,7 +33,13 @@ routeur_production_reelle_interne = APIRouter(
 async def creer_plan_reel(
     requete: RequetePlanReel,
     session: AsyncSession = Depends(fournir_session),
+    roles: list[str] = Depends(fournir_roles_utilisateur),
 ) -> ReponsePlanReel:
+
+    # Admin only (opérateur interdit)
+    if "admin" not in set(roles):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès interdit.")
+
     service = ServiceProductionReelle(session)
 
     try:

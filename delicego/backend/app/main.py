@@ -6,9 +6,11 @@ from app.api.middleware_audit import MiddlewareAudit
 from app.api.routeur import router
 from app.api.sante import routeur_sante
 from app.core.base_donnees import fournir_session_async
+from app.core.logging_config import configurer_logging
 
 
 def creer_application() -> FastAPI:
+    configurer_logging()
     application = FastAPI(title="DéliceGo")
 
     # Middleware audit (append-only)

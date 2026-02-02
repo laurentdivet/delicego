@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependances import fournir_session, verifier_acces_interne
+from app.api.dependances_auth import verifier_authentifie, verifier_roles_requis_legacy
 from app.api.schemas.production import (
     ReponseExecutionProduction,
     ReponsePlanificationProduction,
@@ -26,7 +27,11 @@ from app.domaine.services.planifier_production import (
 routeur_production_interne = APIRouter(
     prefix="/production",
     tags=["production_interne"],
-    dependencies=[Depends(verifier_acces_interne)],
+    dependencies=[
+        Depends(verifier_acces_interne),
+        Depends(verifier_authentifie),
+        Depends(verifier_roles_requis_legacy("admin")),
+    ],
 )
 
 

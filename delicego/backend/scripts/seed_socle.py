@@ -10,9 +10,8 @@ from app.domaine.modeles.auth import Role, User, UserRole
 
 
 ROLES = [
-    ("manager", "Manager"),
-    ("employe", "Employé"),
-    ("qualite", "Qualité"),
+    ("admin", "Admin"),
+    ("operateur", "Opérateur"),
 ]
 
 
@@ -26,7 +25,7 @@ async def seed() -> None:
 
         await session.commit()
 
-        # manager par défaut
+        # admin par défaut
         email = "admin@delicego.local"
         res = await session.execute(select(User).where(User.email == email))
         user = res.scalar_one_or_none()
@@ -40,14 +39,14 @@ async def seed() -> None:
             session.add(user)
             await session.flush()
 
-        role_manager = (await session.execute(select(Role).where(Role.code == "manager"))).scalar_one()
+        role_admin = (await session.execute(select(Role).where(Role.code == "admin"))).scalar_one()
 
         # assoc role si pas déjà
         res = await session.execute(
-            select(UserRole).where(UserRole.user_id == user.id).where(UserRole.role_id == role_manager.id)
+            select(UserRole).where(UserRole.user_id == user.id).where(UserRole.role_id == role_admin.id)
         )
         if res.scalar_one_or_none() is None:
-            session.add(UserRole(user_id=user.id, role_id=role_manager.id))
+            session.add(UserRole(user_id=user.id, role_id=role_admin.id))
 
         await session.commit()
 

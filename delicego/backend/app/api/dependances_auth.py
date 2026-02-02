@@ -59,9 +59,42 @@ async def fournir_roles_utilisateur(
     return [r[0] for r in res.all()]
 
 
+def verifier_authentifie(user: User = Depends(fournir_utilisateur_courant)) -> None:
+    """Dépendance simple : exige un utilisateur authentifié."""
+
+    # Le vrai travail est fait dans fournir_utilisateur_courant.
+    # Ici, on garde la signature pour être utilisée directement dans dependencies=[...]
+    # sans se préoccuper de la valeur de retour.
+    return None
+
+
 def verifier_roles_requis(*roles_requis: str):
     async def _dep(roles: list[str] = Depends(fournir_roles_utilisateur)) -> None:
         if not set(roles_requis).intersection(set(roles)):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès interdit.")
 
     return _dep
+
+
+def verifier_roles_requis_legacy(*roles_requis: str):
+    """Compat tests/ancien naming.
+
+    Historique du repo : on a eu des rôles `manager`, `employe`, ...
+    La demande actuelle vise `admin` / `operateur`.
+
+    Pour ne pas casser les tests existants, on mappe :
+    - manager -> admin
+    - employe -> operateur
+    """
+
+    # Si un appelant passe encore un rôle legacy, on l'accepte tel quel.
+    # Sinon, on mappe vers les rôles actuels.
+    mapping = {
+        "admin": "admin",
+        "operateur": "operateur",
+        "manager": "manager",
+        "employe": "employe",
+    }
+
+    roles_mappes = [mapping.get(r, r) for r in roles_requis]
+    return verifier_roles_requis(*roles_mappes)

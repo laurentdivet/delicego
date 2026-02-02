@@ -71,7 +71,8 @@ class Ingredient(ModeleHorodate):
         comment="Unité utilisée pour le stock (ex : kg, g, l, pièce)",
     )
 
-    unite_mesure: Mapped[str] = mapped_column(
+    # ⬇️ SEULE CORRECTION : renommage du champ
+    unite_consommation: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
         comment="Unité de mesure de référence pour les calculs",
@@ -86,17 +87,47 @@ class Ingredient(ModeleHorodate):
     actif: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
-class Menu(ModeleHorodate):
-    """Un menu représente un produit vendable (LOCAL, par magasin).
+class IngredientAlias(ModeleHorodate):
+    """Alias d'un ingrédient de référence.
 
-    Alignement Inpulse-like:
-    - Le menu porte le prix et la disponibilité (actif/commandable)
-    - Le menu référence une Recette (globale)
-
-    IMPORTANT (production terrain) :
-    - `gencode` est la clé machine (scannée) pour incrémenter la production réelle.
-    - Le gencode ne doit jamais être affiché à l'écran.
+    Objectif: mapper des libellés bruts (PDF, saisie manuelle, etc.) vers Ingredient,
+    de manière déterministe et sans jamais créer d'ingrédient automatiquement.
     """
+
+    __tablename__ = "ingredient_alias"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    alias: Mapped[str] = mapped_column(
+        String(),
+        nullable=False,
+        comment="Texte brut original (ex: issu d'un PDF)",
+    )
+    alias_normalise: Mapped[str] = mapped_column(
+        String(),
+        nullable=False,
+        unique=True,
+        index=True,
+        comment="Texte normalisé (unique) destiné au matching",
+    )
+
+    ingredient_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("ingredient.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    ingredient: Mapped[Ingredient] = relationship()
+
+    source: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        comment="Ex: 'pdf', 'manual', 'auto'",
+    )
+
+    actif: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+class Menu(ModeleHorodate):
+    """Un menu représente un produit vendable (LOCAL, par magasin)."""
 
     __tablename__ = "menu"
 
@@ -149,25 +180,15 @@ class Menu(ModeleHorodate):
 
 
 class Recette(ModeleHorodate):
-    """Recette GLOBALE (métier), réutilisable par plusieurs menus et magasins."""
-
     __tablename__ = "recette"
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     nom: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
 
-    # L'ancien champ `menu_id` reste en base (nullable) pour compat migration/downgrade,
-    # mais on ne le mappe plus en ORM pour éviter une dépendance circulaire Menu<->Recette
-    # qui casse les tests (drop_all).
-
     menus: Mapped[list[Menu]] = relationship("Menu", back_populates="recette")
 
 
 class LigneRecette(ModeleHorodate):
-    """
-    Ligne de composition d’une recette (BOM).
-    """
-
     __tablename__ = "ligne_recette"
     __table_args__ = (
         UniqueConstraint(
@@ -193,10 +214,7 @@ class LigneRecette(ModeleHorodate):
     )
     ingredient: Mapped[Ingredient] = relationship()
 
-    quantite: Mapped[float] = mapped_column(
-        nullable=False,
-        comment="Quantité d’ingrédient nécessaire pour la recette",
-    )
+    quantite: Mapped[float] = mapped_column(nullable=False)
 
     unite: Mapped[str] = mapped_column(
         String(50),
@@ -205,8 +223,55 @@ class LigneRecette(ModeleHorodate):
     )
 
 
-# Index pour les performances et la cohérence
 Index("ix_menu_magasin_id", Menu.magasin_id)
 Index("ix_menu_recette_id", Menu.recette_id)
 Index("ix_ligne_recette_recette_id", LigneRecette.recette_id)
 Index("ix_ligne_recette_ingredient_id", LigneRecette.ingredient_id)
+
+
+class LigneRecetteImportee(ModeleHorodate):
+    """Staging des lignes issues de PDFs.
+
+    Choix structurel: `ligne_recette.ingredient_id` est NOT NULL.
+    On conserve donc les lignes PDF ici (ingredient_id nullable + libellés brut/normalisé).
+    """
+
+    __tablename__ = "ligne_recette_importee"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+
+    recette_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("recette.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    recette: Mapped[Recette] = relationship()
+
+    pdf: Mapped[str] = mapped_column(String(), nullable=False)
+    ingredient_brut: Mapped[str] = mapped_column(String(), nullable=False)
+    ingredient_normalise: Mapped[str] = mapped_column(String(), nullable=False, index=True)
+
+    quantite: Mapped[float] = mapped_column(nullable=False)
+    unite: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    ordre: Mapped[int | None] = mapped_column(
+        nullable=True,
+        comment="Ordre stable de la ligne dans la recette (0..N-1)",
+    )
+
+    ingredient_id: Mapped[UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("ingredient.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+    ingredient: Mapped[Ingredient | None] = relationship()
+
+    statut_mapping: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        comment="mapped|unmapped",
+    )
+
+
+Index("ix_ligne_recette_importee_recette_id", LigneRecetteImportee.recette_id)
+Index("ix_ligne_recette_importee_statut_mapping", LigneRecetteImportee.statut_mapping)

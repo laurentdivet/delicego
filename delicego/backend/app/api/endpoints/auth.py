@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependances import fournir_session
+from app.api.dependances_auth import fournir_utilisateur_courant
 from app.api.schemas.auth import ReponseLogin, RequeteLogin
 from app.core.configuration import parametres_application
 from app.core.securite import creer_token_acces, verifier_mot_de_passe
@@ -14,6 +15,32 @@ from app.domaine.modeles.auth import Role, User, UserRole
 
 
 routeur_auth = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@routeur_auth.get("/me")
+async def me(
+    user: User = Depends(fournir_utilisateur_courant),
+    session: AsyncSession = Depends(fournir_session),
+) -> dict:
+    """Infos utilisateur courant (debug/UX).
+
+    Retour volontairement minimal, sans exposer le hash.
+    """
+
+    roles_res = await session.execute(
+        select(Role.code)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .where(UserRole.user_id == user.id)
+    )
+    roles = [r[0] for r in roles_res.all()]
+
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "nom_affiche": user.nom_affiche,
+        "actif": user.actif,
+        "roles": roles,
+    }
 
 
 @routeur_auth.post("/login", response_model=ReponseLogin)

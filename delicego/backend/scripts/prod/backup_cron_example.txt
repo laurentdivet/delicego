@@ -1,0 +1,8 @@
+# Exemple de crontab (Linux) pour un backup quotidien à 02:15 UTC
+#
+# 1) Définir les variables d'env (idéalement via un fichier sécurisé root-only)
+# 2) Lancer le script
+#
+# Note macOS: utiliser launchd plutôt que cron.
+
+15 2 * * * cd /opt/delicego && PGHOST=localhost PGPORT=5432 PGUSER=delicego PGPASSWORD='***' PGDATABASE=delicego ./backend/scripts/prod/backup_postgres.sh --keep 14 >> /var/log/delicego/backup.log 2>&1

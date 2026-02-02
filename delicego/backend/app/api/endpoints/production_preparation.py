@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -8,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependances import fournir_session, verifier_acces_interne
+from app.api.dependances_auth import verifier_authentifie, verifier_roles_requis_legacy
 from app.api.schemas.production_preparation import (
     EvenementTraceabilite,
     ReponseCreneauQuantite,
@@ -32,10 +34,17 @@ from app.domaine.services.executer_production import (
 from app.services.production_cuisine_service import CRENEAUX, ServiceProductionCuisine
 
 
+logger = logging.getLogger(__name__)
+
+
 routeur_production_preparation_interne = APIRouter(
     prefix="/production-preparation",
     tags=["production_preparation_interne"],
-    dependencies=[Depends(verifier_acces_interne)],
+    dependencies=[
+        Depends(verifier_acces_interne),
+        Depends(verifier_authentifie),
+        Depends(verifier_roles_requis_legacy("admin", "operateur")),
+    ],
 )
 
 
@@ -59,6 +68,7 @@ async def lire_ecran_cuisine(
         kpis = await service.calculer_kpis(plan=plan)
         lignes = await service.lire_lignes(plan_production_id=plan.id)
     except Exception as e:
+        logger.exception("production_preparation_lire_ecran_cuisine_erreur magasin_id=%s date=%s", magasin_id, date)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     cuisine = [
@@ -114,6 +124,13 @@ async def action_produit(
     service_cuisine = ServiceProductionCuisine(session)
     service_exec = ServiceExecutionProduction(session)
 
+    logger.info(
+        "production_preparation_produit magasin_id=%s date=%s recette_id=%s",
+        requete.magasin_id,
+        requete.date,
+        requete.recette_id,
+    )
+
     try:
         async with session.begin():
             plan = await service_cuisine.trouver_plan(
@@ -139,6 +156,12 @@ async def action_produit(
     except (DonneesInvalidesProduction, ProductionDejaExecutee) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
+        logger.exception(
+            "production_preparation_produit_erreur magasin_id=%s date=%s recette_id=%s",
+            requete.magasin_id,
+            requete.date,
+            requete.recette_id,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     return {"status": "ok"}
@@ -161,6 +184,14 @@ async def action_ajuste(
     service_cuisine = ServiceProductionCuisine(session)
     service_exec = ServiceExecutionProduction(session)
 
+    logger.info(
+        "production_preparation_ajuste magasin_id=%s date=%s recette_id=%s quantite=%s",
+        requete.magasin_id,
+        requete.date,
+        requete.recette_id,
+        float(requete.quantite),
+    )
+
     try:
         async with session.begin():
             plan = await service_cuisine.trouver_plan(
@@ -179,6 +210,12 @@ async def action_ajuste(
     except (DonneesInvalidesProduction, ProductionDejaExecutee) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
+        logger.exception(
+            "production_preparation_ajuste_erreur magasin_id=%s date=%s recette_id=%s",
+            requete.magasin_id,
+            requete.date,
+            requete.recette_id,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     return {"status": "ok"}
@@ -200,6 +237,13 @@ async def action_non_produit(
 
     service_cuisine = ServiceProductionCuisine(session)
 
+    logger.info(
+        "production_preparation_non_produit magasin_id=%s date=%s recette_id=%s",
+        requete.magasin_id,
+        requete.date,
+        requete.recette_id,
+    )
+
     try:
         async with session.begin():
             plan = await service_cuisine.trouver_plan(
@@ -215,6 +259,12 @@ async def action_non_produit(
             )
 
     except Exception as e:
+        logger.exception(
+            "production_preparation_non_produit_erreur magasin_id=%s date=%s recette_id=%s",
+            requete.magasin_id,
+            requete.date,
+            requete.recette_id,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     return {"status": "ok"}
@@ -248,6 +298,12 @@ async def scan_gencode(
     if not gencode:
         raise HTTPException(status_code=400, detail="gencode manquant")
 
+    logger.info(
+        "production_preparation_scan magasin_id=%s date=%s",
+        requete.magasin_id,
+        requete.date,
+    )
+
     try:
         async with session.begin():
             res = await session.execute(select(Menu).where(Menu.gencode == gencode))
@@ -279,6 +335,11 @@ async def scan_gencode(
             except (DonneesInvalidesProduction, ProductionDejaExecutee, ErreurProduction):
                 # En mode "scan compté" (ou si lot déjà exécuté / stock non initialisé),
                 # on ne bloque pas le scan.
+                logger.warning(
+                    "production_preparation_scan_degrade lot_id=%s recette_id=%s",
+                    lot.id,
+                    menu.recette_id,
+                )
                 pass
 
             # Recalcule de la ligne
@@ -306,6 +367,11 @@ async def scan_gencode(
     except (DonneesInvalidesProduction, ProductionDejaExecutee) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
+        logger.exception(
+            "production_preparation_scan_erreur magasin_id=%s date=%s",
+            requete.magasin_id,
+            requete.date,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
 

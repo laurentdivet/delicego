@@ -1,0 +1,4 @@
+row_number,alias,alias_normalise,ingredient_id,existing_ingredient_id,action,message,force_applied,actif_final,source_final
+2,Tomates (fraîches),tomates,11111111-1111-1111-1111-111111111111,,error,ingredient_id inexistant en base,false,true,manual_csv
+3,Oignons émincés,oignons,22222222-2222-2222-2222-222222222222,,error,ingredient_id inexistant en base,false,true,manual_csv
+4,Crème fraîche 20%,creme,33333333-3333-3333-3333-333333333333,,error,ingredient_id inexistant en base,false,false,manual_csv
