@@ -141,3 +141,7 @@ def test_public_impact_write_endpoints_when_enabled_smoke():
     reco2 = [x for x in data2.get("recommendations") or [] if x.get("id") == reco_id][0]
     assert reco2["status"] == "ACKNOWLEDGED"
     assert any(a.get("id") == action_id and a.get("status") == "DONE" for a in (reco2.get("actions") or []))
+
+    # Assert minimal: les actions reviennent via la relation ORM (donc champ présent + liste)
+    assert "actions" in reco2
+    assert isinstance(reco2["actions"], list)

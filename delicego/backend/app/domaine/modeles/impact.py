@@ -4,6 +4,7 @@ from datetime import date, datetime
 from uuid import uuid4
 
 from sqlalchemy import Date, DateTime, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -101,4 +102,66 @@ class IngredientImpact(ModeleHorodate):
     __table_args__ = (
         UniqueConstraint("ingredient_id", name="uq_ingredient_impact_ingredient"),
         Index("ix_ingredient_impact_categorie", "categorie_co2"),
+    )
+
+
+class ImpactRecommendationEvent(ModeleHorodate):
+    """Event de recommandation (source: moteur Impact).
+
+    Table existante en DB: `impact_recommendation_event`.
+    """
+
+    __tablename__ = "impact_recommendation_event"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+
+    code: Mapped[str] = mapped_column(String(120), nullable=False)
+    metric: Mapped[str] = mapped_column(String(120), nullable=False)
+    entities_signature: Mapped[str] = mapped_column(String(64), nullable=False)
+
+    severity: Mapped[str] = mapped_column(String(20), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    entities: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    occurrences: Mapped[int] = mapped_column(nullable=False)
+
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    comment: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    actions: Mapped[list[ImpactAction]] = relationship(
+        "ImpactAction",
+        back_populates="recommendation_event",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+class ImpactAction(ModeleHorodate):
+    """Action manuelle associée à une recommandation.
+
+    Table existante en DB: `impact_action`.
+    """
+
+    __tablename__ = "impact_action"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+
+    recommendation_event_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("impact_recommendation_event.id"),
+        nullable=False,
+    )
+
+    action_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    description: Mapped[str | None] = mapped_column(nullable=True)
+    created_by: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    expected_impact: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    recommendation_event: Mapped[ImpactRecommendationEvent] = relationship(
+        "ImpactRecommendationEvent",
+        back_populates="actions",
     )

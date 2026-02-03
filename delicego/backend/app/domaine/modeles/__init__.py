@@ -18,7 +18,13 @@ from app.domaine.modeles.achats import (
     LigneCommandeFournisseur,
 )
 from app.domaine.modeles.ventes_prevision import ExecutionPrevision, LignePrevision, Vente
-from app.domaine.modeles.impact import FacteurCO2, IngredientImpact, PerteCasse
+from app.domaine.modeles.impact import (
+    FacteurCO2,
+    ImpactAction,
+    ImpactRecommendationEvent,
+    IngredientImpact,
+    PerteCasse,
+)
 from app.domaine.modeles.commande_client import CommandeClient, LigneCommandeClient
 from app.domaine.modeles.comptabilite import EcritureComptable, JournalComptable
 from app.domaine.modeles.production import (

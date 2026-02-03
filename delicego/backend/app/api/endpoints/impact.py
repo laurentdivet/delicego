@@ -6,7 +6,8 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.api.dependances import fournir_session, verifier_acces_interne
 from app.api.schemas.impact import (
@@ -22,6 +23,7 @@ from app.api.schemas.impact import (
 )
 from app.core.configuration import parametres_application
 from app.impact.kpis import impact_summary, kpi_co2_estimate, kpi_local_share, kpi_waste_rate
+from app.domaine.modeles.impact import ImpactAction, ImpactRecommendationEvent
 
 
 def verifier_acces_public_impact_dashboard() -> None:
@@ -79,73 +81,35 @@ async def impact_dashboard_public_endpoint(
     )
     co2 = await kpi_co2_estimate(session, days=days)
 
-    # --- Recommendations + actions
-    # On récupère d'abord les reco events.
-    reco_rows = (
+    # --- Recommendations + actions (ORM)
+    reco_events = (
         await session.execute(
-            text(
-                """
-                SELECT
-                  id::text AS id,
-                  code,
-                  severity,
-                  status,
-                  occurrences,
-                  last_seen_at,
-                  entities
-                FROM impact_recommendation_event
-                ORDER BY last_seen_at DESC
-                LIMIT :limit
-                """
-            ),
-            {"limit": int(limit)},
+            select(ImpactRecommendationEvent)
+            .options(selectinload(ImpactRecommendationEvent.actions))
+            .order_by(ImpactRecommendationEvent.last_seen_at.desc())
+            .limit(int(limit))
         )
-    ).mappings().all()
-
-    reco_ids = [r["id"] for r in reco_rows]
-    actions_by_reco: dict[str, list[dict[str, object]]] = {}
-    if reco_ids:
-        action_rows = (
-            await session.execute(
-                text(
-                    """
-                    SELECT
-                      id::text AS id,
-                      recommendation_event_id::text AS recommendation_event_id,
-                      status,
-                      description
-                    FROM impact_action
-                    WHERE recommendation_event_id = ANY(CAST(:reco_ids AS uuid[]))
-                    ORDER BY cree_le DESC
-                    """
-                ),
-                {"reco_ids": reco_ids},
-            )
-        ).mappings().all()
-
-        for a in action_rows:
-            rid = str(a["recommendation_event_id"])
-            actions_by_reco.setdefault(rid, []).append(
-                {
-                    "id": str(a["id"]),
-                    "status": str(a["status"]),
-                    "description": a["description"],
-                }
-            )
+    ).scalars().all()
 
     recommendations = []
-    for r in reco_rows:
-        rid = str(r["id"])
+    for r in reco_events:
         recommendations.append(
             {
-                "id": rid,
-                "code": r["code"],
-                "severity": r["severity"],
-                "status": r["status"],
-                "occurrences": int(r["occurrences"] or 0),
-                "last_seen_at": r["last_seen_at"],
-                "entities": r["entities"],
-                "actions": actions_by_reco.get(rid, []),
+                "id": str(r.id),
+                "code": r.code,
+                "severity": r.severity,
+                "status": r.status,
+                "occurrences": int(r.occurrences or 0),
+                "last_seen_at": r.last_seen_at,
+                "entities": r.entities,
+                "actions": [
+                    {
+                        "id": str(a.id),
+                        "status": a.status,
+                        "description": a.description,
+                    }
+                    for a in sorted(r.actions or [], key=lambda x: x.cree_le, reverse=True)
+                ],
             }
         )
 
@@ -177,69 +141,35 @@ async def impact_create_action_public_endpoint(
     except Exception as e:
         raise HTTPException(status_code=404, detail="Recommendation event introuvable.") from e
 
-    exists = (
-        await session.execute(
-            text("SELECT 1 FROM impact_recommendation_event WHERE id = :id"),
-            {"id": reco_uuid},
-        )
-    ).scalar_one_or_none()
-    if exists is None:
+    reco = await session.get(ImpactRecommendationEvent, reco_uuid)
+    if reco is None:
         raise HTTPException(status_code=404, detail="Recommendation event introuvable.")
 
     now = datetime.now(timezone.utc)
-    row = (
-        await session.execute(
-            text(
-                """
-                INSERT INTO impact_action (
-                  id,
-                  recommendation_event_id,
-                  action_type,
-                  description,
-                  status,
-                  cree_le,
-                  mis_a_jour_le
-                )
-                VALUES (
-                  :id,
-                  :recommendation_event_id,
-                  :action_type,
-                  :description,
-                  'OPEN',
-                  :now,
-                  :now
-                )
-                RETURNING
-                  id::text AS id,
-                  recommendation_event_id::text AS recommendation_event_id,
-                  action_type,
-                  description,
-                  status,
-                  cree_le AS created_at
-                """
-            ),
-            {
-                "id": uuid4(),
-                "recommendation_event_id": reco_uuid,
-                "action_type": body.action_type,
-                "description": body.description,
-                "now": now,
-            },
-        )
-    ).mappings().one()
+    action = ImpactAction(
+        id=uuid4(),
+        recommendation_event_id=reco_uuid,
+        action_type=body.action_type,
+        description=body.description,
+        status="OPEN",
+        cree_le=now,
+        mis_a_jour_le=now,
+    )
+    session.add(action)
     await session.commit()
+    await session.refresh(action)
 
     # 201: on garde le décorateur FastAPI simple + on renvoie quand même l'objet.
     # (FastAPI mettra 200 par défaut; on force explicitement.)
     # NOTE: on ne dépend pas de Response ici pour garder l'endpoint simple.
     # On utilise le status_code dans le décorateur ci-dessous.
     return ImpactActionSchema(
-        id=str(row["id"]),
-        recommendation_event_id=str(row["recommendation_event_id"]),
-        action_type=str(row["action_type"]),
-        description=row["description"],
-        status=str(row["status"]),
-        created_at=row["created_at"],
+        id=str(action.id),
+        recommendation_event_id=str(action.recommendation_event_id),
+        action_type=str(action.action_type),
+        description=action.description,
+        status=str(action.status),
+        created_at=action.cree_le,
     )
 
 
@@ -254,67 +184,26 @@ async def impact_patch_action_public_endpoint(
     except Exception as e:
         raise HTTPException(status_code=404, detail="Action introuvable.") from e
 
-    row = (
-        await session.execute(
-            text(
-                """
-                SELECT
-                  id::text AS id,
-                  recommendation_event_id::text AS recommendation_event_id,
-                  action_type,
-                  description,
-                  status,
-                  cree_le AS created_at
-                FROM impact_action
-                WHERE id = :id
-                """
-            ),
-            {"id": action_uuid},
-        )
-    ).mappings().one_or_none()
-    if row is None:
+    action = await session.get(ImpactAction, action_uuid)
+    if action is None:
         raise HTTPException(status_code=404, detail="Action introuvable.")
 
-    updates: dict[str, object] = {"id": action_uuid, "now": datetime.now(timezone.utc)}
-    sets: list[str] = ["mis_a_jour_le = :now"]
-
     if body.status is not None:
-        sets.append("status = :status")
-        updates["status"] = body.status
+        action.status = body.status
     if body.description is not None:
-        sets.append("description = :description")
-        updates["description"] = body.description
+        action.description = body.description
 
-    if len(sets) > 1:
-        updated = (
-            await session.execute(
-                text(
-                    """
-                    UPDATE impact_action
-                    SET {sets}
-                    WHERE id = :id
-                    RETURNING
-                      id::text AS id,
-                      recommendation_event_id::text AS recommendation_event_id,
-                      action_type,
-                      description,
-                      status,
-                      cree_le AS created_at
-                    """.format(sets=", ".join(sets))
-                ),
-                updates,
-            )
-        ).mappings().one()
-        await session.commit()
-        row = updated
+    action.mis_a_jour_le = datetime.now(timezone.utc)
+    await session.commit()
+    await session.refresh(action)
 
     return ImpactActionSchema(
-        id=str(row["id"]),
-        recommendation_event_id=str(row["recommendation_event_id"]),
-        action_type=str(row["action_type"]),
-        description=row["description"],
-        status=str(row["status"]),
-        created_at=row["created_at"],
+        id=str(action.id),
+        recommendation_event_id=str(action.recommendation_event_id),
+        action_type=str(action.action_type),
+        description=action.description,
+        status=str(action.status),
+        created_at=action.cree_le,
     )
 
 
@@ -329,69 +218,30 @@ async def impact_patch_recommendation_public_endpoint(
     except Exception as e:
         raise HTTPException(status_code=404, detail="Recommendation event introuvable.") from e
 
-    existing = (
-        await session.execute(
-            text(
-                """
-                SELECT
-                  id::text AS id,
-                  status,
-                  comment,
-                  resolved_at
-                FROM impact_recommendation_event
-                WHERE id = :id
-                """
-            ),
-            {"id": reco_uuid},
-        )
-    ).mappings().one_or_none()
-    if existing is None:
+    reco = await session.get(ImpactRecommendationEvent, reco_uuid)
+    if reco is None:
         raise HTTPException(status_code=404, detail="Recommendation event introuvable.")
 
-    updates: dict[str, object] = {"id": reco_uuid, "now": datetime.now(timezone.utc)}
-    sets: list[str] = ["mis_a_jour_le = :now"]
-
-    # Règle choisie (cohérente et simple):
-    # - status=RESOLVED => resolved_at = now (si pas déjà set)
-    # - status!=RESOLVED => resolved_at = NULL (on considère que l'event est à nouveau actif)
+    now = datetime.now(timezone.utc)
     if body.status is not None:
-        sets.append("status = :status")
-        updates["status"] = body.status
+        reco.status = body.status
         if body.status == "RESOLVED":
-            sets.append("resolved_at = COALESCE(resolved_at, :now)")
+            reco.resolved_at = reco.resolved_at or now
         else:
-            sets.append("resolved_at = NULL")
+            reco.resolved_at = None
 
     if body.comment is not None:
-        sets.append("comment = :comment")
-        updates["comment"] = body.comment
+        reco.comment = body.comment
 
-    if len(sets) > 1:
-        updated = (
-            await session.execute(
-                text(
-                    """
-                    UPDATE impact_recommendation_event
-                    SET {sets}
-                    WHERE id = :id
-                    RETURNING
-                      id::text AS id,
-                      status,
-                      comment,
-                      resolved_at
-                    """.format(sets=", ".join(sets))
-                ),
-                updates,
-            )
-        ).mappings().one()
-        await session.commit()
-        existing = updated
+    reco.mis_a_jour_le = now
+    await session.commit()
+    await session.refresh(reco)
 
     return {
-        "id": str(existing["id"]),
-        "status": str(existing["status"]),
-        "comment": str(existing["comment"] or ""),
-        "resolved_at": (existing["resolved_at"].isoformat() if existing["resolved_at"] else ""),
+        "id": str(reco.id),
+        "status": str(reco.status),
+        "comment": str(reco.comment or ""),
+        "resolved_at": (reco.resolved_at.isoformat() if reco.resolved_at else ""),
     }
 
 
