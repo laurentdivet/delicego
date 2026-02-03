@@ -3,7 +3,10 @@ from __future__ import annotations
 import os
 from collections.abc import AsyncIterator
 
-from fastapi import Header, HTTPException, status
+import hmac
+import logging
+
+from fastapi import Header, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.base_donnees import fournir_session_async
@@ -27,32 +30,59 @@ def fournir_email_client() -> EmailClient:
 
 
 def verifier_acces_interne(
+    request: Request,
     x_cle_interne: str | None = Header(default=None, alias="X-CLE-INTERNE"),
 ) -> None:
-    """Contrôle d’accès minimal (API interne).
+    """Contrôle d’accès minimal (API interne) par Bearer token.
 
-    Règle : un header technique doit être présent.
+    Règle : toutes les routes /api/interne/* exigent un header:
+        Authorization: Bearer <token>
 
-    NOTE :
-    - Pas d’auth lourde (non demandé).
-    - La vérification reste volontairement simple.
+    Le token attendu est configuré via la variable d’environnement:
+        INTERNAL_API_TOKEN
 
-    TEMPORAIRE — sécurité interne désactivée pour phase fonctionnelle
-    --------------------------------------------------------------
-    Si `DISABLE_INTERNAL_AUTH=true` (case-insensitive), on bypass la
-    vérification du header `X-CLE-INTERNE` afin de débloquer les écrans
-    internes, dashboards et endpoints /api/interne/*.
+    Comportement:
+    - Prod (ENV=prod) : INTERNAL_API_TOKEN requis, sinon 500 au démarrage de la dépendance.
+    - Dev : si absent, fallback possible sur "dev-token" avec warning explicite.
 
-    Pour réactiver :
-    - unset DISABLE_INTERNAL_AUTH (ou mettre à "false")
-    - redémarrer l'API
+    Compat:
+    - On garde le header legacy X-CLE-INTERNE (si présent) pour ne pas casser
+      des tests/clients existants, mais il est considéré *uniquement* comme token.
     """
 
-    if (os.getenv("DISABLE_INTERNAL_AUTH") or "").strip().lower() in {"1", "true", "yes", "y", "on"}:
-        return
+    logger = logging.getLogger(__name__)
 
-    if x_cle_interne is None or not x_cle_interne.strip():
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Accès interne refusé (header X-CLE-INTERNE manquant).",
+    # Environnement (best-effort)
+    env = (os.getenv("ENV") or os.getenv("APP_ENV") or os.getenv("ENVIRONMENT") or "").strip().lower()
+    is_prod = env in {"prod", "production"}
+
+    expected = (os.getenv("INTERNAL_API_TOKEN") or "").strip()
+    if not expected:
+        if is_prod:
+            # C’est une misconfiguration: on préfère expliciter.
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="INTERNAL_API_TOKEN manquant en prod.",
+            )
+        expected = "dev-token"
+        logger.warning(
+            "INTERNAL_API_TOKEN absent: fallback DEV sur 'dev-token' (à NE PAS utiliser en prod).",
         )
+
+    # 1) Authorization: Bearer <token>
+    authorization = request.headers.get("Authorization")
+    token: str | None = None
+    if authorization:
+        prefix = "bearer "
+        if authorization.lower().startswith(prefix):
+            token = authorization[len(prefix) :].strip()
+
+    # 2) Legacy: X-CLE-INTERNE (si jamais présent)
+    if not token and x_cle_interne and x_cle_interne.strip():
+        token = x_cle_interne.strip()
+
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token interne manquant.")
+
+    if not hmac.compare_digest(token, expected):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token interne invalide.")

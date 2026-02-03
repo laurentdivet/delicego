@@ -9,6 +9,25 @@ import {
   type ImpactDashboardResponse,
 } from '../api/impact'
 
+import {
+  lireImpactDashboard,
+  creerImpactAction,
+  patchImpactRecommendation,
+} from '../api/interne'
+
+function boolEnv(v: unknown): boolean {
+  return String(v || '').trim().toLowerCase() === '1' || String(v || '').trim().toLowerCase() === 'true'
+}
+
+function useInternalApi(): boolean {
+  // En prod on peut fixer VITE_USE_INTERNAL_API=1
+  return boolEnv(import.meta.env.VITE_USE_INTERNAL_API)
+}
+
+function tokenPresent(): boolean {
+  return Boolean(localStorage.getItem('INTERNAL_TOKEN') || '')
+}
+
 function formatPct(n: number) {
   return `${Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(n * 100)}%`
 }
@@ -77,7 +96,11 @@ function RecoActions({ r }: { r: ImpactDashboardRecommendation }) {
             onChange={async (e) => {
               const next = e.target.value as 'OPEN' | 'DONE' | 'CANCELLED'
               try {
-                await patchImpactActionPublic(a.id, { status: next })
+                if (internal) {
+                  await patchImpactAction(a.id, { status: next })
+                } else {
+                  await patchImpactActionPublic(a.id, { status: next })
+                }
               } finally {
                 // refresh global via event (simple)
                 window.dispatchEvent(new CustomEvent('impact:refresh'))
@@ -115,8 +138,13 @@ function Modal({ open, onClose, children }: { open: boolean; onClose: () => void
 }
 
 export function ImpactDashboard() {
+  const internal = useInternalApi()
   const [days, setDays] = useState<number>(30)
   const [limit, setLimit] = useState<number>(200)
+
+  // UI "Accès interne" (pas de login): stockage local uniquement.
+  const [internalTokenInput, setInternalTokenInput] = useState<string>(() => localStorage.getItem('INTERNAL_TOKEN') || '')
+  const [internalTokenSavedAt, setInternalTokenSavedAt] = useState<string | null>(null)
 
   const [data, setData] = useState<ImpactDashboardResponse | null>(null)
   const [loading, setLoading] = useState(false)
@@ -137,7 +165,7 @@ export function ImpactDashboard() {
     setErreur(null)
     setMessageSucces(null)
     try {
-      const d = await lireImpactDashboardPublic({ days, limit })
+      const d = internal ? await lireImpactDashboard({ days, limit }) : await lireImpactDashboardPublic({ days, limit })
       setData(d)
       setLastRefreshAt(new Date().toISOString())
       setEditionDesactivee(false)
@@ -145,7 +173,14 @@ export function ImpactDashboard() {
       const err = e as { message?: string }
       const msg = err?.message || 'Erreur de chargement (impact dashboard)'
       setErreur(msg)
-      setEditionDesactivee(msg.includes('403') || msg.toLowerCase().includes('désactivé') || msg.toLowerCase().includes('forbidden'))
+      // Public: 403 si guard DEV-only off. Interne: 401 si token absent/invalid.
+      setEditionDesactivee(
+        msg.includes('403') ||
+          msg.includes('401') ||
+          msg.toLowerCase().includes('désactivé') ||
+          msg.toLowerCase().includes('forbidden') ||
+          msg.toLowerCase().includes('token')
+      )
     } finally {
       setLoading(false)
     }
@@ -172,6 +207,53 @@ export function ImpactDashboard() {
 
   return (
     <div className="space-y-6">
+      {internal && (
+        <div className="rounded-xl border bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="text-sm font-semibold">Accès interne</div>
+              <div className="text-xs text-slate-500">
+                Cette page utilise <span className="font-mono">/api/interne/impact/*</span>. Saisis un token Bearer pour accéder.
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 md:flex-row md:items-end">
+              <div>
+                <label className="block text-xs font-medium text-slate-600">Token</label>
+                <input
+                  type="password"
+                  className="mt-1 w-80 max-w-full rounded-md border bg-white px-3 py-2 text-sm font-mono"
+                  value={internalTokenInput}
+                  onChange={(e) => setInternalTokenInput(e.target.value)}
+                  placeholder="Bearer token…"
+                  aria-label="Token interne"
+                />
+              </div>
+              <button
+                type="button"
+                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                onClick={() => {
+                  const t = internalTokenInput.trim()
+                  if (!t) {
+                    localStorage.removeItem('INTERNAL_TOKEN')
+                  } else {
+                    localStorage.setItem('INTERNAL_TOKEN', t)
+                  }
+                  setInternalTokenSavedAt(new Date().toISOString())
+                  window.dispatchEvent(new CustomEvent('impact:refresh'))
+                }}
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-2 text-xs text-slate-500">
+            Statut: {tokenPresent() ? <span className="text-emerald-700">token présent</span> : <span className="text-amber-700">token manquant</span>}
+            {internalTokenSavedAt ? ` • sauvegardé: ${formatDateHeure(internalTokenSavedAt)}` : ''}
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Impact – Pilotage (lecture seule)</h1>
@@ -217,7 +299,15 @@ export function ImpactDashboard() {
 
       {editionDesactivee && (
         <div className="rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-          Édition désactivée. Active <span className="font-mono">IMPACT_DASHBOARD_PUBLIC_DEV=1</span> côté backend.
+          {internal ? (
+            <>
+              Accès interne requis. Vérifie que tu as saisi le bon token et que le backend a <span className="font-mono">INTERNAL_API_TOKEN</span>.
+            </>
+          ) : (
+            <>
+              Édition désactivée. Active <span className="font-mono">IMPACT_DASHBOARD_PUBLIC_DEV=1</span> côté backend.
+            </>
+          )}
         </div>
       )}
       {messageSucces && <div className="rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{messageSucces}</div>}
@@ -227,7 +317,7 @@ export function ImpactDashboard() {
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div className="text-sm font-semibold">Résumé</div>
           <div className="text-xs text-slate-500">
-            API: /api/impact/dashboard • {loading ? 'Mise à jour…' : lastRefreshAt ? `Dernier refresh: ${formatDateHeure(lastRefreshAt)}` : '—'}
+            API: {internal ? '/api/interne/impact/dashboard' : '/api/impact/dashboard'} • {loading ? 'Mise à jour…' : lastRefreshAt ? `Dernier refresh: ${formatDateHeure(lastRefreshAt)}` : '—'}
           </div>
         </div>
 
@@ -343,7 +433,11 @@ export function ImpactDashboard() {
                           setMessageSucces(null)
                           setLoading(true)
                           try {
-                            await patchImpactRecommendationPublic(r.id, { status: next })
+                            if (internal) {
+                              await patchImpactRecommendation(r.id, { status: next })
+                            } else {
+                              await patchImpactRecommendationPublic(r.id, { status: next })
+                            }
                             setMessageSucces('Recommandation mise à jour.')
                           } catch (err: unknown) {
                             const e2 = err as { message?: string }
@@ -456,10 +550,17 @@ export function ImpactDashboard() {
                 setErreur(null)
                 setMessageSucces(null)
                 try {
-                  await creerImpactActionPublic(modalRecoId, {
-                    action_type: newActionType,
-                    description: newActionDesc.trim() ? newActionDesc.trim() : null,
-                  })
+                  if (internal) {
+                    await creerImpactAction(modalRecoId, {
+                      action_type: newActionType,
+                      description: newActionDesc.trim() ? newActionDesc.trim() : null,
+                    })
+                  } else {
+                    await creerImpactActionPublic(modalRecoId, {
+                      action_type: newActionType,
+                      description: newActionDesc.trim() ? newActionDesc.trim() : null,
+                    })
+                  }
                   setModalOpen(false)
                   setMessageSucces('Action créée.')
                   window.dispatchEvent(new CustomEvent('impact:refresh'))

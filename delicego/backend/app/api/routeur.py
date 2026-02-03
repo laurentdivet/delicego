@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 # ===== Endpoints internes =====
 from app.api.endpoints.production import routeur_production_interne
@@ -43,7 +43,10 @@ router.include_router(routeur_utilisateurs)
 # ==============================
 # API INTERNE
 # ==============================
-routeur_interne = APIRouter(prefix="/api/interne")
+from app.api.dependances import verifier_acces_interne
+
+
+routeur_interne = APIRouter(prefix="/api/interne", dependencies=[Depends(verifier_acces_interne)])
 
 routeur_interne.include_router(routeur_production_interne)
 routeur_interne.include_router(routeur_production_preparation_interne)
