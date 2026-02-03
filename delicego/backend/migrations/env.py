@@ -60,7 +60,9 @@ def _resolve_migrations_url() -> str:
     if ini_url and _is_valid_postgresql_url(ini_url):
         return ini_url
 
-    raise RuntimeError("DATABASE_URL is required for migrations")
+    raise RuntimeError(
+        "DATABASE_URL is required for migrations (or set a valid sqlalchemy.url in alembic.ini)"
+    )
 
 
 # Résoudre l'URL une fois (mode strict) et la pousser dans la config.
