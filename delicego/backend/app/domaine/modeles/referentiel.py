@@ -54,6 +54,15 @@ class Fournisseur(ModeleHorodate):
     nom: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
     actif: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
+    # ===== Impact / sourcing =====
+    # Ces champs sont utilisés pour calculer la part locale des achats.
+    # Ils sont optionnels et peuvent être renseignés progressivement.
+    region: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    distance_km: Mapped[float | None] = mapped_column(
+        nullable=True,
+        comment="Distance estimée fournisseur -> site (km). Renseignée manuellement / import.",
+    )
+
 
 class Ingredient(ModeleHorodate):
     """

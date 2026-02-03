@@ -32,7 +32,11 @@ target_metadata = BaseModele.metadata
 def url_base_donnees() -> str:
     # Prefer the (potentially overridden) Alembic sqlalchemy.url.
     # Fallback to application settings when not provided.
-    return config.get_main_option("sqlalchemy.url") or parametres_application.url_base_donnees
+    url = config.get_main_option("sqlalchemy.url")
+    if url and url.startswith("driver://"):
+        # Valeur placeholder de alembic.ini : ignorer.
+        url = None
+    return url or parametres_application.url_base_donnees
 
 
 def run_migrations_offline() -> None:

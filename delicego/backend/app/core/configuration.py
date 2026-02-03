@@ -14,6 +14,10 @@ class ParametresApplication(BaseSettings):
 
     url_base_donnees: str = "postgresql+asyncpg://delicego:delicego@localhost:5433/delicego"
 
+    # ===== Impact KPIs =====
+    # Seuil (km) pour considérer un fournisseur comme "local".
+    impact_local_km_threshold: float = 100.0
+
     jwt_secret: str = "CHANGE_ME"
     jwt_duree_minutes: int = 60 * 12
 

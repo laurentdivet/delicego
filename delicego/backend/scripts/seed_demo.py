@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.core.configuration import parametres_application
 from app.domaine.enums.types import TypeMagasin, TypeMouvementStock
 from app.domaine.modeles.referentiel import Fournisseur, Ingredient, LigneRecette, Magasin, Menu, Recette
+from app.domaine.modeles.achats import ReceptionMarchandise
+from app.domaine.modeles.impact import FacteurCO2, IngredientImpact, PerteCasse
 from app.domaine.modeles.stock_tracabilite import Lot, MouvementStock
 
 
@@ -25,6 +27,7 @@ async def seed_demo() -> None:
     Ainsi l'endpoint /api/client/menus renvoie `disponible=true`.
     """
 
+    # En test, on évite les problèmes de schéma/connexion en réutilisant DATABASE_URL de l'environnement.
     engine = create_async_engine(parametres_application.url_base_donnees, pool_pre_ping=True)
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -41,16 +44,29 @@ async def seed_demo() -> None:
         resi = await session.execute(select(Ingredient).where(Ingredient.nom == "Farine"))
         ingredient = resi.scalar_one_or_none()
         if ingredient is None:
-            ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_mesure="kg", cout_unitaire=1.2, actif=True)
+            ingredient = Ingredient(
+                nom="Farine",
+                unite_stock="kg",
+                unite_consommation="kg",
+                cout_unitaire=1.2,
+                actif=True,
+            )
             session.add(ingredient)
             await session.flush()
 
         # Fournisseur (minimum pour la génération achats)
-        resf = await session.execute(select(Fournisseur).where(Fournisseur.nom == "Fournisseur Démo"))
-        fournisseur = resf.scalar_one_or_none()
-        if fournisseur is None:
-            fournisseur = Fournisseur(nom="Fournisseur Démo", actif=True)
-            session.add(fournisseur)
+        resf_local = await session.execute(select(Fournisseur).where(Fournisseur.nom == "Fournisseur Local Démo"))
+        fournisseur_local = resf_local.scalar_one_or_none()
+        if fournisseur_local is None:
+            fournisseur_local = Fournisseur(nom="Fournisseur Local Démo", actif=True, region="Occitanie", distance_km=30.0)
+            session.add(fournisseur_local)
+            await session.flush()
+
+        resf_nonlocal = await session.execute(select(Fournisseur).where(Fournisseur.nom == "Fournisseur Non-Local Démo"))
+        fournisseur_nonlocal = resf_nonlocal.scalar_one_or_none()
+        if fournisseur_nonlocal is None:
+            fournisseur_nonlocal = Fournisseur(nom="Fournisseur Non-Local Démo", actif=True, region="Ailleurs", distance_km=800.0)
+            session.add(fournisseur_nonlocal)
             await session.flush()
 
         # Stock (lot + réception)
@@ -100,6 +116,82 @@ async def seed_demo() -> None:
                 )
             )
 
+        # Réceptions "achats" pour KPI local (2 réceptions sur 2 fournisseurs)
+        now = datetime.now(timezone.utc)
+        res_rm = await session.execute(
+            select(ReceptionMarchandise).where(ReceptionMarchandise.magasin_id == magasin.id)
+        )
+        existing_rm = res_rm.scalars().all()
+        if len(existing_rm) == 0:
+            session.add(
+                ReceptionMarchandise(
+                    magasin_id=magasin.id,
+                    fournisseur_id=fournisseur_local.id,
+                    commande_achat_id=None,
+                    recu_le=now - timedelta(days=2),
+                )
+            )
+            session.add(
+                ReceptionMarchandise(
+                    magasin_id=magasin.id,
+                    fournisseur_id=fournisseur_nonlocal.id,
+                    commande_achat_id=None,
+                    recu_le=now - timedelta(days=1),
+                )
+            )
+
+        # Mouvement PERTE pour KPI waste
+        res_perte = await session.execute(
+            select(MouvementStock).where(
+                MouvementStock.type_mouvement == TypeMouvementStock.PERTE,
+                MouvementStock.magasin_id == magasin.id,
+                MouvementStock.ingredient_id == ingredient.id,
+                MouvementStock.reference_externe == "SEED_IMPACT",
+            )
+        )
+        ms_perte = res_perte.scalar_one_or_none()
+        if ms_perte is None:
+            session.add(
+                MouvementStock(
+                    type_mouvement=TypeMouvementStock.PERTE,
+                    magasin_id=magasin.id,
+                    ingredient_id=ingredient.id,
+                    lot_id=lot.id,
+                    quantite=5.0,
+                    unite="kg",
+                    reference_externe="SEED_IMPACT",
+                    commentaire="Perte démo",
+                    horodatage=now - timedelta(days=1),
+                )
+            )
+
+        # PerteCasse (optionnel) pour tester la table dédiée
+        res_pc = await session.execute(select(PerteCasse).where(PerteCasse.magasin_id == magasin.id))
+        if res_pc.first() is None:
+            session.add(
+                PerteCasse(
+                    magasin_id=magasin.id,
+                    ingredient_id=ingredient.id,
+                    jour=(date.today() - timedelta(days=1)),
+                    quantite=1.0,
+                    unite="kg",
+                    cause="casse",
+                )
+            )
+
+        # Facteurs CO2 + mapping ingredient -> catégorie
+        res_fc = await session.execute(select(FacteurCO2).where(FacteurCO2.categorie.in_(["viande", "legumes"])))
+        existing_fc = {f.categorie for f in res_fc.scalars().all()}
+        # Valeurs indicatives (documentées), remplaçables
+        if "viande" not in existing_fc:
+            session.add(FacteurCO2(categorie="viande", facteur_kgco2e_par_kg=20.0, source="indicatif"))
+        if "legumes" not in existing_fc:
+            session.add(FacteurCO2(categorie="legumes", facteur_kgco2e_par_kg=2.0, source="indicatif"))
+
+        res_map = await session.execute(select(IngredientImpact).where(IngredientImpact.ingredient_id == ingredient.id))
+        if res_map.scalar_one_or_none() is None:
+            session.add(IngredientImpact(ingredient_id=ingredient.id, categorie_co2="legumes"))
+
         # Menus + recettes + BOM
         menus_demo = [
             ("Menu Midi", "Plat + dessert", 12.9),
@@ -108,6 +200,14 @@ async def seed_demo() -> None:
         ]
 
         for nom, description, prix in menus_demo:
+            # Recette associée (modèle actuel: Menu.recette_id obligatoire)
+            resr = await session.execute(select(Recette).where(Recette.nom == f"Recette {nom}"))
+            recette = resr.scalar_one_or_none()
+            if recette is None:
+                recette = Recette(nom=f"Recette {nom}")
+                session.add(recette)
+                await session.flush()
+
             resm = await session.execute(select(Menu).where(Menu.nom == nom, Menu.magasin_id == magasin.id))
             menu = resm.scalar_one_or_none()
             if menu is None:
@@ -118,16 +218,9 @@ async def seed_demo() -> None:
                     actif=True,
                     commandable=True,
                     magasin_id=magasin.id,
+                    recette_id=recette.id,
                 )
                 session.add(menu)
-                await session.flush()
-
-            # Recette associée
-            resr = await session.execute(select(Recette).where(Recette.menu_id == menu.id))
-            recette = resr.scalar_one_or_none()
-            if recette is None:
-                recette = Recette(nom=f"Recette {nom}", menu_id=menu.id, magasin_id=magasin.id)
-                session.add(recette)
                 await session.flush()
 
             # BOM : 0.5 kg de farine par menu

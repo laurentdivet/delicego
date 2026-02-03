@@ -20,6 +20,7 @@ from app.api.endpoints.previsions_besoins import routeur_previsions_besoins_inte
 from app.api.endpoints.previsions_alertes import routeur_previsions_alertes_interne
 from app.api.endpoints.analytics import routeur_analytics
 from app.api.endpoints.production_jour import routeur_production_jour_interne
+from app.api.endpoints.impact import routeur_impact_interne
 
 # ===== Endpoints client =====
 from app.api.endpoints.commande_client import routeur_commande_client
@@ -59,6 +60,7 @@ routeur_interne.include_router(routeur_prevision_ventes_interne)
 routeur_interne.include_router(routeur_previsions_besoins_interne)
 routeur_interne.include_router(routeur_previsions_alertes_interne)
 routeur_interne.include_router(routeur_production_jour_interne)
+routeur_interne.include_router(routeur_impact_interne)
 
 router.include_router(routeur_interne)
 

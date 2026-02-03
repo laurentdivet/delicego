@@ -21,11 +21,16 @@ export DATABASE_URL='postgresql+asyncpg://delicego:delicego@localhost:5432/delic
 createdb -h localhost -p 5432 -U delicego delicego
 
 cd backend
+
 pip install -r requirements.txt
 
 # Validations CI (migrations + checks + seed)
 python -m scripts.ci_validate
 ```
+
+### Impact KPIs (Étape 4)
+
+Documentation : `backend/docs/IMPACT_KPIS.md`
 
 Notes:
 - La CI est en "Solution 2": aucun ENUM PostgreSQL natif attendu.
