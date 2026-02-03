@@ -23,6 +23,7 @@ from app.api.schemas.impact import (
 )
 from app.core.configuration import parametres_application
 from app.impact.kpis import impact_summary, kpi_co2_estimate, kpi_local_share, kpi_waste_rate
+from app.impact.kpis import impact_top_causes, impact_trends_and_deltas
 from app.domaine.modeles.impact import ImpactAction, ImpactRecommendationEvent
 
 
@@ -56,6 +57,7 @@ routeur_impact_interne = APIRouter(
 @routeur_impact_interne.get("/dashboard", response_model=ImpactDashboardResponse)
 async def impact_dashboard_interne_endpoint(
     days: int = Query(default=30, ge=1, le=365),
+    compare_days: int | None = Query(default=None, ge=1, le=365),
     limit: int = Query(default=200, ge=1, le=5000),
     magasin_id: UUID | None = Query(default=None),
     status: str | None = Query(default=None, description="OPEN|ACKNOWLEDGED|RESOLVED"),
@@ -80,6 +82,21 @@ async def impact_dashboard_interne_endpoint(
         local_km_threshold=parametres_application.impact_local_km_threshold,
     )
     co2 = await kpi_co2_estimate(session, days=days, magasin_id=magasin_id)
+
+    trends = await impact_trends_and_deltas(
+        session,
+        days=days,
+        compare_days=compare_days,
+        magasin_id=magasin_id,
+        local_km_threshold=parametres_application.impact_local_km_threshold,
+    )
+    top_causes = await impact_top_causes(
+        session,
+        days=days,
+        magasin_id=magasin_id,
+        local_km_threshold=parametres_application.impact_local_km_threshold,
+        limit=5,
+    )
 
     # --- Recommendations + actions (ORM)
     q = select(ImpactRecommendationEvent).options(selectinload(ImpactRecommendationEvent.actions))
@@ -134,6 +151,8 @@ async def impact_dashboard_interne_endpoint(
             "local_share": local.local_share,
             "co2_kgco2e": co2.total_kgco2e,
         },
+        trends=trends,
+        top_causes=top_causes,
         alerts=[],
         recommendations=recommendations,
     )
@@ -142,6 +161,7 @@ async def impact_dashboard_interne_endpoint(
 @routeur_impact_public.get("/dashboard", response_model=ImpactDashboardResponse)
 async def impact_dashboard_public_endpoint(
     days: int = Query(default=30, ge=1, le=365),
+    compare_days: int | None = Query(default=None, ge=1, le=365),
     limit: int = Query(default=200, ge=1, le=5000),
     magasin_id: UUID | None = Query(default=None),
     status: str | None = Query(default=None, description="OPEN|ACKNOWLEDGED|RESOLVED"),
@@ -171,6 +191,21 @@ async def impact_dashboard_public_endpoint(
         local_km_threshold=parametres_application.impact_local_km_threshold,
     )
     co2 = await kpi_co2_estimate(session, days=days, magasin_id=magasin_id)
+
+    trends = await impact_trends_and_deltas(
+        session,
+        days=days,
+        compare_days=compare_days,
+        magasin_id=magasin_id,
+        local_km_threshold=parametres_application.impact_local_km_threshold,
+    )
+    top_causes = await impact_top_causes(
+        session,
+        days=days,
+        magasin_id=magasin_id,
+        local_km_threshold=parametres_application.impact_local_km_threshold,
+        limit=5,
+    )
 
     # --- Recommendations + actions (ORM)
     q = select(ImpactRecommendationEvent).options(selectinload(ImpactRecommendationEvent.actions))
@@ -223,6 +258,8 @@ async def impact_dashboard_public_endpoint(
             "local_share": local.local_share,
             "co2_kgco2e": co2.total_kgco2e,
         },
+        trends=trends,
+        top_causes=top_causes,
         alerts=[],
         recommendations=recommendations,
     )

@@ -83,10 +83,62 @@ class ImpactDashboardKpisSchema(BaseModel):
     co2_kgco2e: float
 
 
+class ImpactTrendSerieSchema(BaseModel):
+    series: list[SeriePointSchema]
+    delta_pct: float | None = None
+    delta_abs: float | None = None
+
+
+class ImpactDashboardTrendsSchema(BaseModel):
+    waste_rate: ImpactTrendSerieSchema
+    local_share: ImpactTrendSerieSchema
+    co2_kg: ImpactTrendSerieSchema
+
+
+class ImpactTopCauseItemSchema(BaseModel):
+    id: str
+    label: str
+    value: float
+
+
+class ImpactTopCauseSupplierItemSchema(BaseModel):
+    id: str
+    nom: str
+    value: float
+
+
+class ImpactDashboardTopCausesWasteSchema(BaseModel):
+    ingredients: list[ImpactTopCauseItemSchema] = Field(default_factory=list)
+    menus: list[ImpactTopCauseItemSchema] = Field(default_factory=list)
+
+
+class ImpactDashboardTopCausesLocalSchema(BaseModel):
+    fournisseurs: list[ImpactTopCauseSupplierItemSchema] = Field(default_factory=list)
+
+
+class ImpactTopCauseCO2ItemSchema(BaseModel):
+    id: str
+    label: str
+    value_kgco2e: float
+
+
+class ImpactDashboardTopCausesCO2Schema(BaseModel):
+    ingredients: list[ImpactTopCauseCO2ItemSchema] = Field(default_factory=list)
+    fournisseurs: list[ImpactTopCauseSupplierItemSchema] = Field(default_factory=list)
+
+
+class ImpactDashboardTopCausesSchema(BaseModel):
+    waste: ImpactDashboardTopCausesWasteSchema
+    local: ImpactDashboardTopCausesLocalSchema
+    co2: ImpactDashboardTopCausesCO2Schema
+
+
 class ImpactDashboardResponse(BaseModel):
     kpis: ImpactDashboardKpisSchema
     alerts: list[ImpactDashboardAlertSchema] = Field(default_factory=list)
     recommendations: list[ImpactDashboardRecommendationSchema] = Field(default_factory=list)
+    trends: ImpactDashboardTrendsSchema | None = None
+    top_causes: ImpactDashboardTopCausesSchema | None = None
 
 
 class ImpactActionCreateBody(BaseModel):

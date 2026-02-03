@@ -11,11 +11,337 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domaine.enums.types import TypeMouvementStock
 from app.domaine.modeles.achats import ReceptionMarchandise
 from app.domaine.modeles.impact import FacteurCO2, IngredientImpact, PerteCasse
-from app.domaine.modeles.referentiel import Fournisseur
+from app.domaine.modeles.production import LotProduction
+from app.domaine.modeles.referentiel import Fournisseur, Ingredient, Recette
 from app.domaine.modeles.stock_tracabilite import MouvementStock
+from app.domaine.modeles.stock_tracabilite import Lot
 
 
 PeriodUnit = Literal["day", "week"]
+
+
+def _safe_delta(current: float, baseline: float) -> tuple[float | None, float | None]:
+    """Return (delta_pct, delta_abs) with safe division.
+
+    - delta_abs = current - baseline
+    - delta_pct = (current - baseline) / baseline when baseline != 0 else None
+    """
+
+    delta_abs = float(current - baseline)
+    if baseline == 0:
+        return None, delta_abs
+    return float(delta_abs / baseline), delta_abs
+
+
+async def impact_trends_and_deltas(
+    session: AsyncSession,
+    *,
+    days: int,
+    compare_days: int | None = None,
+    magasin_id: UUID | None = None,
+    local_km_threshold: float = 100.0,
+) -> dict[str, object]:
+    """Compute daily series + deltas for dashboard.
+
+    Returns dict compatible with `ImpactDashboardTrendsSchema`:
+    {
+      "waste_rate": {"series": [{date,value}], "delta_pct": .., "delta_abs": ..},
+      "local_share": {..},
+      "co2_kg": {..}
+    }
+    """
+
+    if compare_days is None:
+        compare_days = days
+    if compare_days <= 0:
+        raise ValueError("compare_days must be > 0")
+
+    # --- current series
+    w = await kpi_waste_rate(session, days=days, magasin_id=magasin_id)
+    l = await kpi_local_share(
+        session,
+        days=days,
+        magasin_id=magasin_id,
+        local_km_threshold=local_km_threshold,
+    )
+    c = await kpi_co2_estimate(session, days=days, magasin_id=magasin_id)
+
+    # --- baseline period bounds (previous compare_days days ending day before current start)
+    start, *_ = _bounds(days)
+    baseline_end = start - timedelta(days=1)
+    baseline_start = baseline_end - timedelta(days=compare_days - 1)
+    baseline_start_dt = datetime.combine(baseline_start, datetime.min.time()).replace(tzinfo=timezone.utc)
+    baseline_end_dt = datetime.combine(baseline_end, datetime.max.time()).replace(tzinfo=timezone.utc)
+
+    # Waste baseline (same queries as kpi_waste_rate, but custom bounds)
+    signe_perte = case((MouvementStock.type_mouvement == TypeMouvementStock.PERTE, 1), else_=0)
+    signe_input = case(
+        (
+            MouvementStock.type_mouvement.in_([TypeMouvementStock.RECEPTION, TypeMouvementStock.CONSOMMATION]),
+            1,
+        ),
+        else_=0,
+    )
+    q = (
+        select(
+            func.coalesce(func.sum(signe_perte * MouvementStock.quantite), 0.0).label("waste_qty"),
+            func.coalesce(func.sum(signe_input * MouvementStock.quantite), 0.0).label("input_qty"),
+        )
+        .select_from(MouvementStock)
+        .where(MouvementStock.horodatage >= baseline_start_dt, MouvementStock.horodatage <= baseline_end_dt)
+    )
+    if magasin_id is not None:
+        q = q.where(MouvementStock.magasin_id == magasin_id)
+    waste_qty_ms, input_qty = (await session.execute(q)).one()
+    waste_qty = float(waste_qty_ms or 0.0)
+    input_qty = float(input_qty or 0.0)
+
+    q_pc = (
+        select(func.coalesce(func.sum(PerteCasse.quantite), 0.0))
+        .select_from(PerteCasse)
+        .where(PerteCasse.jour >= baseline_start, PerteCasse.jour <= baseline_end)
+    )
+    if magasin_id is not None:
+        q_pc = q_pc.where(PerteCasse.magasin_id == magasin_id)
+    waste_qty += float((await session.execute(q_pc)).scalar_one() or 0.0)
+    baseline_waste_rate = (waste_qty / input_qty) if input_qty > 0 else 0.0
+
+    # Local baseline
+    is_local = case(
+        (
+            (Fournisseur.distance_km.is_not(None)) & (Fournisseur.distance_km <= local_km_threshold),
+            1,
+        ),
+        else_=0,
+    )
+    q = (
+        select(
+            func.count(ReceptionMarchandise.id).label("total"),
+            func.coalesce(func.sum(is_local), 0).label("local"),
+        )
+        .select_from(ReceptionMarchandise)
+        .join(Fournisseur, Fournisseur.id == ReceptionMarchandise.fournisseur_id)
+        .where(ReceptionMarchandise.recu_le >= baseline_start_dt, ReceptionMarchandise.recu_le <= baseline_end_dt)
+    )
+    if magasin_id is not None:
+        q = q.where(ReceptionMarchandise.magasin_id == magasin_id)
+    total, local = (await session.execute(q)).one()
+    total_i = int(total or 0)
+    local_i = int(local or 0)
+    baseline_local_share = (local_i / total_i) if total_i > 0 else 0.0
+
+    # CO2 baseline
+    q = (
+        select(func.coalesce(func.sum(MouvementStock.quantite * FacteurCO2.facteur_kgco2e_par_kg), 0.0))
+        .select_from(MouvementStock)
+        .join(IngredientImpact, IngredientImpact.ingredient_id == MouvementStock.ingredient_id)
+        .join(FacteurCO2, FacteurCO2.categorie == IngredientImpact.categorie_co2)
+        .where(
+            MouvementStock.horodatage >= baseline_start_dt,
+            MouvementStock.horodatage <= baseline_end_dt,
+            MouvementStock.type_mouvement == TypeMouvementStock.RECEPTION,
+        )
+    )
+    if magasin_id is not None:
+        q = q.where(MouvementStock.magasin_id == magasin_id)
+    baseline_co2 = float((await session.execute(q)).scalar_one() or 0.0)
+
+    w_pct, w_abs = _safe_delta(w.waste_rate, baseline_waste_rate)
+    l_pct, l_abs = _safe_delta(l.local_share, baseline_local_share)
+    c_pct, c_abs = _safe_delta(c.total_kgco2e, baseline_co2)
+
+    return {
+        "waste_rate": {
+            "series": [
+                {"date": p.date, "value": p.value}
+                for p in w.series_waste_rate[: (days if days < 7 else len(w.series_waste_rate))]
+            ],
+            "delta_pct": w_pct,
+            "delta_abs": w_abs,
+        },
+        "local_share": {
+            "series": [
+                {"date": p.date, "value": p.value}
+                for p in l.series_local_share[: (days if days < 7 else len(l.series_local_share))]
+            ],
+            "delta_pct": l_pct,
+            "delta_abs": l_abs,
+        },
+        "co2_kg": {
+            "series": [
+                {"date": p.date, "value": p.value}
+                for p in c.series_kgco2e[: (days if days < 7 else len(c.series_kgco2e))]
+            ],
+            "delta_pct": c_pct,
+            "delta_abs": c_abs,
+        },
+    }
+
+
+async def impact_top_causes(
+    session: AsyncSession,
+    *,
+    days: int,
+    magasin_id: UUID | None = None,
+    local_km_threshold: float = 100.0,
+    limit: int = 5,
+) -> dict[str, object]:
+    """Top causes explicables (règles simples, sans ML) pour le dashboard."""
+
+    start, end, start_dt, end_dt = _bounds(days)
+
+    # -----------------
+    # Waste: top ingredients by PERTE qty
+    # -----------------
+    q = (
+        select(
+            MouvementStock.ingredient_id.label("id"),
+            Ingredient.nom.label("label"),
+            func.coalesce(func.sum(MouvementStock.quantite), 0.0).label("value"),
+        )
+        .select_from(MouvementStock)
+        .join(Ingredient, Ingredient.id == MouvementStock.ingredient_id)
+        .where(
+            MouvementStock.horodatage >= start_dt,
+            MouvementStock.horodatage <= end_dt,
+            MouvementStock.type_mouvement == TypeMouvementStock.PERTE,
+        )
+        .group_by(MouvementStock.ingredient_id, Ingredient.nom)
+        .order_by(func.sum(MouvementStock.quantite).desc())
+        .limit(int(limit))
+    )
+    if magasin_id is not None:
+        q = q.where(MouvementStock.magasin_id == magasin_id)
+    rows = (await session.execute(q)).all()
+    waste_ingredients = [
+        {"id": str(r.id), "label": str(r.label), "value": float(r.value or 0.0)} for r in rows
+    ]
+
+    # Waste: top menus proxy = lots de production par recette/menu
+    # (si menu_id est null: on retombe sur recette_id)
+    q = (
+        select(
+            func.coalesce(LotProduction.recette_id, LotProduction.recette_id).label("recette_id"),
+            Recette.nom.label("label"),
+            func.count(LotProduction.id).label("value"),
+        )
+        .select_from(LotProduction)
+        .join(Recette, Recette.id == LotProduction.recette_id)
+        .where(LotProduction.produit_le >= start_dt, LotProduction.produit_le <= end_dt)
+        .group_by(LotProduction.recette_id, Recette.nom)
+        .order_by(func.count(LotProduction.id).desc())
+        .limit(int(limit))
+    )
+    if magasin_id is not None:
+        q = q.where(LotProduction.magasin_id == magasin_id)
+    rows = (await session.execute(q)).all()
+    waste_menus = [{"id": str(r.recette_id), "label": str(r.label), "value": float(r.value or 0)} for r in rows]
+
+    # -----------------
+    # Local: top non-local suppliers by receptions count
+    # -----------------
+    is_non_local = case(
+        (
+            (Fournisseur.distance_km.is_(None)) | (Fournisseur.distance_km > local_km_threshold),
+            1,
+        ),
+        else_=0,
+    )
+    q = (
+        select(
+            Fournisseur.id.label("id"),
+            Fournisseur.nom.label("nom"),
+            func.count(ReceptionMarchandise.id).label("value"),
+        )
+        .select_from(ReceptionMarchandise)
+        .join(Fournisseur, Fournisseur.id == ReceptionMarchandise.fournisseur_id)
+        .where(
+            ReceptionMarchandise.recu_le >= start_dt,
+            ReceptionMarchandise.recu_le <= end_dt,
+            is_non_local == 1,
+        )
+        .group_by(Fournisseur.id, Fournisseur.nom)
+        .order_by(func.count(ReceptionMarchandise.id).desc())
+        .limit(int(limit))
+    )
+    if magasin_id is not None:
+        q = q.where(ReceptionMarchandise.magasin_id == magasin_id)
+    rows = (await session.execute(q)).all()
+    local_fournisseurs = [
+        {"id": str(r.id), "nom": str(r.nom), "value": float(r.value or 0)} for r in rows
+    ]
+
+    # -----------------
+    # CO2: top ingredients by receptions qty * facteur (ignore missing mapping)
+    # -----------------
+    q = (
+        select(
+            MouvementStock.ingredient_id.label("id"),
+            Ingredient.nom.label("label"),
+            func.coalesce(func.sum(MouvementStock.quantite * FacteurCO2.facteur_kgco2e_par_kg), 0.0).label(
+                "kgco2e"
+            ),
+        )
+        .select_from(MouvementStock)
+        .join(Ingredient, Ingredient.id == MouvementStock.ingredient_id)
+        .join(IngredientImpact, IngredientImpact.ingredient_id == MouvementStock.ingredient_id)
+        .join(FacteurCO2, FacteurCO2.categorie == IngredientImpact.categorie_co2)
+        .where(
+            MouvementStock.horodatage >= start_dt,
+            MouvementStock.horodatage <= end_dt,
+            MouvementStock.type_mouvement == TypeMouvementStock.RECEPTION,
+        )
+        .group_by(MouvementStock.ingredient_id, Ingredient.nom)
+        .order_by(func.sum(MouvementStock.quantite * FacteurCO2.facteur_kgco2e_par_kg).desc())
+        .limit(int(limit))
+    )
+    if magasin_id is not None:
+        q = q.where(MouvementStock.magasin_id == magasin_id)
+    rows = (await session.execute(q)).all()
+    co2_ingredients = [
+        {"id": str(r.id), "label": str(r.label), "value_kgco2e": float(r.kgco2e or 0.0)} for r in rows
+    ]
+
+    # CO2: top suppliers by kgco2e (via mouvements stock -> lot -> fournisseur)
+    q = (
+        select(
+            Fournisseur.id.label("id"),
+            Fournisseur.nom.label("nom"),
+            func.coalesce(func.sum(MouvementStock.quantite * FacteurCO2.facteur_kgco2e_par_kg), 0.0).label(
+                "value"
+            ),
+        )
+        .select_from(MouvementStock)
+        .join(IngredientImpact, IngredientImpact.ingredient_id == MouvementStock.ingredient_id)
+        .join(FacteurCO2, FacteurCO2.categorie == IngredientImpact.categorie_co2)
+        .join(  # lot is optional
+            Lot,
+            Lot.id == MouvementStock.lot_id,
+            isouter=True,
+        )
+        .join(Fournisseur, Fournisseur.id == Lot.fournisseur_id, isouter=True)
+        .where(
+            MouvementStock.horodatage >= start_dt,
+            MouvementStock.horodatage <= end_dt,
+            MouvementStock.type_mouvement == TypeMouvementStock.RECEPTION,
+            Fournisseur.id.is_not(None),
+        )
+        .group_by(Fournisseur.id, Fournisseur.nom)
+        .order_by(func.sum(MouvementStock.quantite * FacteurCO2.facteur_kgco2e_par_kg).desc())
+        .limit(int(limit))
+    )
+    if magasin_id is not None:
+        q = q.where(MouvementStock.magasin_id == magasin_id)
+    rows = (await session.execute(q)).all()
+    co2_fournisseurs = [
+        {"id": str(r.id), "nom": str(r.nom), "value": float(r.value or 0.0)} for r in rows
+    ]
+
+    return {
+        "waste": {"ingredients": waste_ingredients, "menus": waste_menus},
+        "local": {"fournisseurs": local_fournisseurs},
+        "co2": {"ingredients": co2_ingredients, "fournisseurs": co2_fournisseurs},
+    }
 
 
 @dataclass(frozen=True)

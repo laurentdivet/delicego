@@ -35,6 +35,18 @@ function formatPct(n: number) {
   return `${Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(n * 100)}%`
 }
 
+function formatSignedPctDelta(n?: number | null) {
+  if (n == null) return '—'
+  const sign = n > 0 ? '+' : ''
+  return `${sign}${Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(n * 100)}%`
+}
+
+function formatSignedNumber(n?: number | null, digits = 2) {
+  if (n == null) return '—'
+  const sign = n > 0 ? '+' : ''
+  return `${sign}${Intl.NumberFormat('fr-FR', { maximumFractionDigits: digits }).format(n)}`
+}
+
 function formatNombre(n: number, digits = 2) {
   return Intl.NumberFormat('fr-FR', { maximumFractionDigits: digits }).format(n)
 }
@@ -77,6 +89,121 @@ function KpiMiniCard({ titre, valeur, sousTitre }: { titre: string; valeur: stri
       <div className="text-xs font-medium text-slate-500">{titre}</div>
       <div className="mt-1 text-2xl font-semibold tabular-nums">{valeur}</div>
       {sousTitre && <div className="mt-1 text-xs text-slate-500">{sousTitre}</div>}
+    </div>
+  )
+}
+
+function Sparkline({ values }: { values: number[] }) {
+  const w = 120
+  const h = 32
+  if (!values || values.length < 2) return <div className="h-8" />
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min
+  const pts = values
+    .map((v, i) => {
+      const x = (i / (values.length - 1)) * w
+      const y = range === 0 ? h / 2 : h - ((v - min) / range) * h
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="block">
+      <polyline fill="none" stroke="currentColor" strokeWidth="2" points={pts} className="text-slate-400" />
+    </svg>
+  )
+}
+
+function TopCausesBlock({ data }: { data: ImpactDashboardResponse | null }) {
+  const tc = data?.top_causes
+  const empty = (arr?: unknown[]) => !arr || arr.length === 0
+  return (
+    <div className="rounded-xl border bg-white p-4 shadow-sm">
+      <div className="mb-3">
+        <div className="text-sm font-semibold">Top causes</div>
+        <div className="text-xs text-slate-500">Explications simples sur la fenêtre sélectionnée</div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-lg border p-3">
+          <div className="text-xs font-semibold text-slate-700">Waste</div>
+          <div className="mt-2 text-xs font-medium text-slate-600">Ingrédients</div>
+          {empty(tc?.waste?.ingredients) ? (
+            <div className="mt-1 text-sm text-slate-500">Données insuffisantes</div>
+          ) : (
+            <ul className="mt-1 space-y-1 text-sm">
+              {tc!.waste.ingredients.slice(0, 5).map((x) => (
+                <li key={x.id} className="flex items-baseline justify-between gap-3">
+                  <span className="truncate">{x.label}</span>
+                  <span className="tabular-nums text-slate-600">{formatNombre(x.value, 2)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="mt-3 text-xs font-medium text-slate-600">Menus (proxy production)</div>
+          {empty(tc?.waste?.menus) ? (
+            <div className="mt-1 text-sm text-slate-500">Données insuffisantes</div>
+          ) : (
+            <ul className="mt-1 space-y-1 text-sm">
+              {tc!.waste.menus.slice(0, 5).map((x) => (
+                <li key={x.id} className="flex items-baseline justify-between gap-3">
+                  <span className="truncate">{x.label}</span>
+                  <span className="tabular-nums text-slate-600">{formatNombre(x.value, 0)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-lg border p-3">
+          <div className="text-xs font-semibold text-slate-700">Local</div>
+          <div className="mt-2 text-xs font-medium text-slate-600">Fournisseurs (non-locaux)</div>
+          {empty(tc?.local?.fournisseurs) ? (
+            <div className="mt-1 text-sm text-slate-500">Données insuffisantes</div>
+          ) : (
+            <ul className="mt-1 space-y-1 text-sm">
+              {tc!.local.fournisseurs.slice(0, 5).map((x) => (
+                <li key={x.id} className="flex items-baseline justify-between gap-3">
+                  <span className="truncate">{x.nom}</span>
+                  <span className="tabular-nums text-slate-600">{formatNombre(x.value, 0)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-lg border p-3">
+          <div className="text-xs font-semibold text-slate-700">CO₂</div>
+          <div className="mt-2 text-xs font-medium text-slate-600">Ingrédients</div>
+          {empty(tc?.co2?.ingredients) ? (
+            <div className="mt-1 text-sm text-slate-500">Données insuffisantes</div>
+          ) : (
+            <ul className="mt-1 space-y-1 text-sm">
+              {tc!.co2.ingredients.slice(0, 5).map((x) => (
+                <li key={x.id} className="flex items-baseline justify-between gap-3">
+                  <span className="truncate">{x.label}</span>
+                  <span className="tabular-nums text-slate-600">{formatNombre(x.value_kgco2e, 1)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="mt-3 text-xs font-medium text-slate-600">Fournisseurs</div>
+          {empty(tc?.co2?.fournisseurs) ? (
+            <div className="mt-1 text-sm text-slate-500">Données insuffisantes</div>
+          ) : (
+            <ul className="mt-1 space-y-1 text-sm">
+              {tc!.co2.fournisseurs.slice(0, 5).map((x) => (
+                <li key={x.id} className="flex items-baseline justify-between gap-3">
+                  <span className="truncate">{x.nom}</span>
+                  <span className="tabular-nums text-slate-600">{formatNombre(x.value, 1)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -243,6 +370,7 @@ export function ImpactDashboard() {
     try {
       const params = {
         days,
+        compare_days: days,
         limit,
         magasin_id: magasinId,
         status: recoStatus || null,
@@ -522,19 +650,61 @@ export function ImpactDashboard() {
         <KpiMiniCard
           titre="Taux de gaspillage"
           valeur={data ? formatPct(data.kpis.waste_rate) : loading ? '…' : '—'}
-          sousTitre={data ? `${data.kpis.days} jours` : undefined}
+          sousTitre={
+            data
+              ? `${data.kpis.days} jours • Δ ${formatSignedPctDelta(data.trends?.waste_rate?.delta_abs ?? null)} (${formatSignedPctDelta(
+                  data.trends?.waste_rate?.delta_pct ?? null
+                )})`
+              : undefined
+          }
         />
         <KpiMiniCard
           titre="Part locale"
           valeur={data ? formatPct(data.kpis.local_share) : loading ? '…' : '—'}
-          sousTitre={data ? `${data.kpis.days} jours` : undefined}
+          sousTitre={
+            data
+              ? `${data.kpis.days} jours • Δ ${formatSignedPctDelta(data.trends?.local_share?.delta_abs ?? null)} (${formatSignedPctDelta(
+                  data.trends?.local_share?.delta_pct ?? null
+                )})`
+              : undefined
+          }
         />
         <KpiMiniCard
           titre="CO₂ estimé"
           valeur={data ? `${formatNombre(data.kpis.co2_kgco2e, 0)} kgCO₂e` : loading ? '…' : '—'}
-          sousTitre={data ? `${data.kpis.days} jours` : undefined}
+          sousTitre={
+            data
+              ? `${data.kpis.days} jours • Δ ${formatSignedNumber(data.trends?.co2_kg?.delta_abs ?? null, 0)} kg (${formatSignedPctDelta(
+                  data.trends?.co2_kg?.delta_pct ?? null
+                )})`
+              : undefined
+          }
         />
       </div>
+
+      {/* Sparklines */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-xl border bg-white p-3 shadow-sm">
+          <div className="text-xs font-medium text-slate-500">Trend waste rate</div>
+          <div className="mt-2 text-slate-500">
+            <Sparkline values={(data?.trends?.waste_rate?.series || []).map((p) => p.value)} />
+          </div>
+        </div>
+        <div className="rounded-xl border bg-white p-3 shadow-sm">
+          <div className="text-xs font-medium text-slate-500">Trend local share</div>
+          <div className="mt-2 text-slate-500">
+            <Sparkline values={(data?.trends?.local_share?.series || []).map((p) => p.value)} />
+          </div>
+        </div>
+        <div className="rounded-xl border bg-white p-3 shadow-sm">
+          <div className="text-xs font-medium text-slate-500">Trend CO₂ (kg)</div>
+          <div className="mt-2 text-slate-500">
+            <Sparkline values={(data?.trends?.co2_kg?.series || []).map((p) => p.value)} />
+          </div>
+        </div>
+      </div>
+
+      <TopCausesBlock data={data} />
 
       {/* Alertes */}
       <div className="rounded-xl border bg-white p-4 shadow-sm">

@@ -24,6 +24,11 @@ Endpoints dashboard (KPIs + reco/actions) :
 - Interne (protégé Bearer): `GET /api/interne/impact/dashboard?days=30&limit=200`
 - Public (DEV-only): `GET /api/impact/dashboard?days=30&limit=200`
 
+Champs additionnels (B2 pilotage quotidien) :
+
+- `compare_days` (optionnel) : période de comparaison pour les deltas (par défaut = `days`)
+- réponse enrichie : `trends` + `top_causes` (les champs restent optionnels pour compat)
+
 ### Filtrage multi-magasins
 
 Paramètre optionnel : `magasin_id` (UUID).
@@ -39,6 +44,63 @@ Paramètres optionnels :
 - `severity`: `LOW|MEDIUM|HIGH`
 - `sort`: `last_seen_desc` (défaut) ou `occurrences_desc`
 - `limit`: déjà présent (défaut 200)
+
+### Trends (séries temporelles + deltas)
+
+Le dashboard renvoie un champ `trends` :
+
+```json
+{
+  "waste_rate": {"series": [{"date": "YYYY-MM-DD", "value": 0.12}], "delta_pct": 0.03, "delta_abs": 0.004},
+  "local_share": {"series": [{"date": "YYYY-MM-DD", "value": 0.40}], "delta_pct": -0.01, "delta_abs": -0.004},
+  "co2_kg": {"series": [{"date": "YYYY-MM-DD", "value": 12.3}], "delta_pct": null, "delta_abs": 0.0}
+}
+```
+
+Règles :
+
+- La série est journalière et respecte les mêmes sources que les KPI (cohérence) + le filtre `magasin_id`.
+- On renvoie **au moins 7 points** (si `days < 7`, on renvoie `days`).
+- `delta_abs = current - baseline` où `baseline` = la période précédente de durée `compare_days`.
+- `delta_pct = (current - baseline) / baseline`.
+  - Si `baseline == 0`, alors `delta_pct = null` (division par 0 gérée proprement).
+
+### Top causes (explicables, règles simples)
+
+Le dashboard renvoie un champ `top_causes` :
+
+```json
+{
+  "waste": {
+    "ingredients": [{"id": "<uuid>", "label": "Tomate", "value": 12.0}],
+    "menus": [{"id": "<uuid>", "label": "Recette X", "value": 8}]
+  },
+  "local": {
+    "fournisseurs": [{"id": "<uuid>", "nom": "Supplier", "value": 3}]
+  },
+  "co2": {
+    "ingredients": [{"id": "<uuid>", "label": "Boeuf", "value_kgco2e": 42.0}],
+    "fournisseurs": [{"id": "<uuid>", "nom": "Supplier", "value": 12.5}]
+  }
+}
+```
+
+Règles (période = `days`, filtre `magasin_id`, top 5) :
+
+- **Waste**
+  - `ingredients` : TOP ingrédients par quantité de pertes (mouvements stock `type=PERTE`).
+  - `menus` : TOP recettes/menus les plus produits sur la période (proxy = nombre de `lot_production`).
+- **Local**
+  - `fournisseurs` : TOP fournisseurs **non locaux** par nombre de réceptions.
+    - non local si `distance_km` est NULL ou `> seuil`.
+- **CO2**
+  - `ingredients` : TOP ingrédients contribuant le plus (réceptions * facteur CO2).
+    - Les ingrédients sans mapping/facteur sont ignorés (join obligatoire sur `ingredient_impact` + `facteur_co2`).
+
+Limites :
+
+- Heuristiques simples, pas de ML.
+- Si données insuffisantes, les listes peuvent être vides.
 
 ### Endpoint magasins (pour l'UI)
 

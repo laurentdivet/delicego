@@ -75,10 +75,29 @@ export type ImpactDashboardResponse = {
   kpis: ImpactDashboardKpis
   alerts: ImpactDashboardAlert[]
   recommendations: ImpactDashboardRecommendation[]
+  trends?: {
+    waste_rate: { series: { date: string; value: number }[]; delta_pct?: number | null; delta_abs?: number | null }
+    local_share: { series: { date: string; value: number }[]; delta_pct?: number | null; delta_abs?: number | null }
+    co2_kg: { series: { date: string; value: number }[]; delta_pct?: number | null; delta_abs?: number | null }
+  } | null
+  top_causes?: {
+    waste: {
+      ingredients: { id: string; label: string; value: number }[]
+      menus: { id: string; label: string; value: number }[]
+    }
+    local: {
+      fournisseurs: { id: string; nom: string; value: number }[]
+    }
+    co2: {
+      ingredients: { id: string; label: string; value_kgco2e: number }[]
+      fournisseurs: { id: string; nom: string; value: number }[]
+    }
+  } | null
 }
 
 export async function lireImpactDashboard(params?: {
   days?: number
+  compare_days?: number | null
   limit?: number
   magasin_id?: string | null
   status?: 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED' | null
@@ -87,6 +106,7 @@ export async function lireImpactDashboard(params?: {
 }): Promise<ImpactDashboardResponse> {
   const qs = new URLSearchParams()
   if (params?.days != null) qs.set('days', String(params.days))
+  if (params?.compare_days != null) qs.set('compare_days', String(params.compare_days))
   if (params?.limit != null) qs.set('limit', String(params.limit))
   if (params?.magasin_id) qs.set('magasin_id', String(params.magasin_id))
   if (params?.status) qs.set('status', String(params.status))
