@@ -20,7 +20,7 @@ from app.api.endpoints.previsions_besoins import routeur_previsions_besoins_inte
 from app.api.endpoints.previsions_alertes import routeur_previsions_alertes_interne
 from app.api.endpoints.analytics import routeur_analytics
 from app.api.endpoints.production_jour import routeur_production_jour_interne
-from app.api.endpoints.impact import routeur_impact_interne
+from app.api.endpoints.impact import routeur_impact_interne, routeur_impact_public
 
 # ===== Endpoints client =====
 from app.api.endpoints.commande_client import routeur_commande_client
@@ -75,3 +75,6 @@ router.include_router(routeur_analytics)
 # API CLIENT PUBLIQUE
 # ==============================
 router.include_router(routeur_commande_client)
+
+# Impact public DEV-only (/api/impact/*)
+router.include_router(routeur_impact_public)
