@@ -31,6 +31,8 @@ async def prevision_ventes(
     - Prévisions API = `prediction_vente` (pipeline ML)
     - `LignePrevision` = planification interne historique (concept différent)
 
+    Granularité: la prévision est au niveau **MENU** (`menu_id`) (et non produit/SKU).
+
     Exemples:
 
     curl -H "X-CLE-INTERNE: $CLE" \

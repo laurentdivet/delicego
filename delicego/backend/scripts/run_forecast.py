@@ -30,6 +30,28 @@ async def main_async() -> int:
         svc = PrevisionVentesMLService(session)
         report = await svc.run_forecast(horizon_days=int(args.horizon), magasin_id=magasin_id, force_retrain=bool(args.force_retrain))
 
+        # Validation explicite: la prévision est au niveau MENU (menu_id obligatoire).
+        # On vérifie qu'on a bien persisté au moins une prédiction.
+        from sqlalchemy import text
+
+        r = await session.execute(
+            text(
+                """
+SELECT count(*)
+FROM prediction_vente
+WHERE magasin_id = :magasin_id
+  AND menu_id IS NULL;
+"""
+            ),
+            {"magasin_id": str(report.magasin_id)},
+        )
+        null_menu = int(r.scalar() or 0)
+        if null_menu:
+            raise RuntimeError(
+                f"[run_forecast] Invariant violated: {null_menu} prediction_vente rows have NULL menu_id. "
+                "Forecast granularity is MENU-level (menu_id is required)."
+            )
+
     await engine.dispose()
     print("[run_forecast] OK")
     print(f"  magasin_id={report.magasin_id}")

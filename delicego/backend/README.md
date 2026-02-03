@@ -42,6 +42,9 @@ Le backend inclut un pipeline ML simple (XGBoost) qui :
    - les **besoins ingrédients futurs** (BOM)
    - les **alertes rupture/surstock** (MVP)
 
+⚠️ Granularité: la prévision est **au niveau MENU** (`menu_id`) (quantité vendue d'un menu par jour et par magasin),
+pas au niveau **PRODUIT** / SKU.
+
 ### Entraînement
 
 Depuis `backend/` :
