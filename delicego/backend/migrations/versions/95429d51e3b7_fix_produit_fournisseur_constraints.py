@@ -8,11 +8,15 @@ Create Date: 2026-01-26 12:28:45.575526
 
 from __future__ import annotations
 
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 
 
 def _has_constraint(conn: sa.engine.Connection, table: str, constraint: str, ctype: str) -> bool:
+    # En mode offline (--sql), impossible d'interroger la DB. On renvoie False;
+    # la migration émettra un DROP CONSTRAINT conditionnel via SQL.
+    if context.is_offline_mode():
+        return False
     return (
         conn.execute(
             sa.text(
@@ -43,22 +47,61 @@ def upgrade() -> None:
     # L'ancienne migration autogénérée avait une contrainte UNIQUE(produit_id, fournisseur_id)
     # qui est invalide fonctionnellement (un fournisseur vend plusieurs produits).
     # On la supprime si elle existe.
-    conn = op.get_bind()
     name = "uq_produit_fournisseur_produit_fournisseur"
-    if _has_constraint(conn, "produit_fournisseur", name, "UNIQUE"):
-        op.drop_constraint(
-            name,
-            "produit_fournisseur",
-            type_="unique",
+    if context.is_offline_mode():
+        op.execute(
+            f"""
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1
+                    FROM information_schema.table_constraints
+                    WHERE table_schema='public'
+                      AND table_name='produit_fournisseur'
+                      AND constraint_name='{name}'
+                      AND constraint_type='UNIQUE'
+                ) THEN
+                    ALTER TABLE produit_fournisseur DROP CONSTRAINT {name};
+                END IF;
+            END $$;
+            """
         )
+    else:
+        conn = op.get_bind()
+        if _has_constraint(conn, "produit_fournisseur", name, "UNIQUE"):
+            op.drop_constraint(
+                name,
+                "produit_fournisseur",
+                type_="unique",
+            )
 
 
 def downgrade() -> None:
-    conn = op.get_bind()
     name = "uq_produit_fournisseur_produit_fournisseur"
-    if not _has_constraint(conn, "produit_fournisseur", name, "UNIQUE"):
-        op.create_unique_constraint(
-            name,
-            "produit_fournisseur",
-            ["produit_id", "fournisseur_id"],
+    if context.is_offline_mode():
+        op.execute(
+            f"""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM information_schema.table_constraints
+                    WHERE table_schema='public'
+                      AND table_name='produit_fournisseur'
+                      AND constraint_name='{name}'
+                      AND constraint_type='UNIQUE'
+                ) THEN
+                    ALTER TABLE produit_fournisseur
+                    ADD CONSTRAINT {name} UNIQUE (produit_id, fournisseur_id);
+                END IF;
+            END $$;
+            """
         )
+    else:
+        conn = op.get_bind()
+        if not _has_constraint(conn, "produit_fournisseur", name, "UNIQUE"):
+            op.create_unique_constraint(
+                name,
+                "produit_fournisseur",
+                ["produit_id", "fournisseur_id"],
+            )

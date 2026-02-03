@@ -19,7 +19,7 @@ WARNING:
 
 from __future__ import annotations
 
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 
 
@@ -33,6 +33,10 @@ depends_on = None
 
 
 def _col_is_enum(table: str, column: str, udt_name: str) -> bool:
+    if context.is_offline_mode():
+        # offline: on ne peut pas introspecter. On retourne True et on s'appuie sur
+        # les IF EXISTS / guards SQL pour éviter de casser.
+        return True
     res = op.get_bind().execute(
         sa.text(
             """
@@ -52,13 +56,36 @@ def _col_is_enum(table: str, column: str, udt_name: str) -> bool:
 
 def _alter_enum_to_varchar(table: str, column: str, udt_name: str, varchar_len: int = 50) -> None:
     # Only alter if the column is currently backed by the expected enum type.
-    if not _col_is_enum(table, column, udt_name):
-        return
-    op.execute(
-        sa.text(
-            f"ALTER TABLE {table} ALTER COLUMN {column} TYPE VARCHAR({varchar_len}) USING {column}::text"
+    if context.is_offline_mode():
+        # offline: on génère un bloc conditionnel basé sur information_schema.
+        op.execute(
+            sa.text(
+                f"""
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema='public'
+                          AND table_name='{table}'
+                          AND column_name='{column}'
+                          AND data_type='USER-DEFINED'
+                          AND udt_name='{udt_name}'
+                    ) THEN
+                        ALTER TABLE {table} ALTER COLUMN {column} TYPE VARCHAR({varchar_len}) USING {column}::text;
+                    END IF;
+                END $$;
+                """
+            )
         )
-    )
+    else:
+        if not _col_is_enum(table, column, udt_name):
+            return
+        op.execute(
+            sa.text(
+                f"ALTER TABLE {table} ALTER COLUMN {column} TYPE VARCHAR({varchar_len}) USING {column}::text"
+            )
+        )
 
 
 def _drop_type_if_exists(type_name: str) -> None:

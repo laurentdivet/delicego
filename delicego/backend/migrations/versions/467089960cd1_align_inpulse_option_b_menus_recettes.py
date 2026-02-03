@@ -8,7 +8,7 @@ Create Date: 2025-12-16 07:28:53.830881
 
 from __future__ import annotations
 
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 
 
@@ -57,20 +57,38 @@ def upgrade() -> None:
     )
 
     # c) SI UN MENU A UN AUTRE NOM -> exception
-    res = op.get_bind().execute(
-        sa.text(
+    # IMPORTANT: en mode offline (--sql), pas de résultat Python. On génère donc un
+    # guard SQL déterministe qui lève une exception côté Postgres.
+    if context.is_offline_mode():
+        op.execute(
             """
-            SELECT count(*)
-            FROM menu
-            WHERE nom NOT IN ('Riz cantonais', 'Pad Thaï crevettes')
+            DO $$
+            DECLARE nb_autres integer;
+            BEGIN
+                SELECT count(*) INTO nb_autres
+                FROM menu
+                WHERE nom NOT IN ('Riz cantonais', 'Pad Thaï crevettes');
+                IF nb_autres > 0 THEN
+                    RAISE EXCEPTION 'Migration échouée: % menus ont un nom différent de ''Riz cantonais'' / ''Pad Thaï crevettes''.', nb_autres;
+                END IF;
+            END $$;
             """
         )
-    )
-    nb_autres = int(res.scalar() or 0)
-    if nb_autres:
-        raise RuntimeError(
-            f"Migration échouée: {nb_autres} menus ont un nom différent de 'Riz cantonais' / 'Pad Thaï crevettes'."
+    else:
+        res = op.get_bind().execute(
+            sa.text(
+                """
+                SELECT count(*)
+                FROM menu
+                WHERE nom NOT IN ('Riz cantonais', 'Pad Thaï crevettes')
+                """
+            )
         )
+        nb_autres = int(res.scalar() or 0)
+        if nb_autres:
+            raise RuntimeError(
+                f"Migration échouée: {nb_autres} menus ont un nom différent de 'Riz cantonais' / 'Pad Thaï crevettes'."
+            )
 
     # Ensuite seulement : rendre menu.recette_id NOT NULL
     op.alter_column("menu", "recette_id", existing_type=sa.UUID(), nullable=False)

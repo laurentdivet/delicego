@@ -8,7 +8,7 @@ Create Date: 2026-02-03
 
 from __future__ import annotations
 
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 
 
@@ -20,6 +20,8 @@ depends_on = None
 
 
 def _col_exists(bind, table: str, col: str) -> bool:
+    if context.is_offline_mode():
+        return False
     insp = sa.inspect(bind)
     try:
         cols = insp.get_columns(table)
@@ -29,6 +31,8 @@ def _col_exists(bind, table: str, col: str) -> bool:
 
 
 def _table_exists(bind, table: str) -> bool:
+    if context.is_offline_mode():
+        return False
     insp = sa.inspect(bind)
     return table in insp.get_table_names()
 

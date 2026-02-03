@@ -8,7 +8,7 @@ Create Date: 2025-12-16 07:03:13.137448
 
 from __future__ import annotations
 
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 
 
@@ -131,14 +131,30 @@ def upgrade() -> None:
     )
 
     # 3) Garde-fou : on refuse de rendre NOT NULL si des menus n'ont pas de recette.
-    # Cela arrive si des menus existent sans Recette associée.
-    res = op.get_bind().execute(sa.text("select count(*) from menu where recette_id is null"))
-    nb_null = int(res.scalar() or 0)
-    if nb_null:
-        raise RuntimeError(
-            f"Migration impossible: {nb_null} menus n'ont pas de recette associée. "
-            "Corriger les données (ou supprimer ces menus) avant de continuer."
+    # IMPORTANT: en mode offline (--sql), il est impossible d'exécuter un SELECT et de
+    # récupérer un résultat côté Python. On émet donc un bloc SQL déterministe qui
+    # lève une exception côté Postgres si la condition n'est pas respectée.
+    if context.is_offline_mode():
+        op.execute(
+            """
+            DO $$
+            DECLARE nb_null integer;
+            BEGIN
+                SELECT count(*) INTO nb_null FROM menu WHERE recette_id IS NULL;
+                IF nb_null > 0 THEN
+                    RAISE EXCEPTION 'Migration impossible: % menus n''ont pas de recette associée. Corriger les données (ou supprimer ces menus) avant de continuer.', nb_null;
+                END IF;
+            END $$;
+            """
         )
+    else:
+        res = op.get_bind().execute(sa.text("select count(*) from menu where recette_id is null"))
+        nb_null = int(res.scalar() or 0)
+        if nb_null:
+            raise RuntimeError(
+                f"Migration impossible: {nb_null} menus n'ont pas de recette associée. "
+                "Corriger les données (ou supprimer ces menus) avant de continuer."
+            )
 
     op.alter_column("menu", "recette_id", existing_type=sa.UUID(), nullable=False)
 
