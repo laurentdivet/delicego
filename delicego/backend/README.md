@@ -205,6 +205,21 @@ Backend unique (structure) fusionnant :
 docker compose up -d
 ```
 
+Par défaut, le `docker-compose.yml` peut exposer PostgreSQL sur **5433** (afin d'éviter les collisions avec un Postgres local sur 5432).
+
+La règle du projet est : **`DATABASE_URL` est la seule source de vérité** (app, scripts, tests).
+Donc les ports 5432/5433 sont interchangeables tant que tu changes uniquement `DATABASE_URL`.
+
+Exemples :
+
+```bash
+# Postgres sur 5432
+export DATABASE_URL='postgresql+asyncpg://delicego:delicego@localhost:5432/delicego'
+
+# Postgres sur 5433
+export DATABASE_URL='postgresql+asyncpg://delicego:delicego@localhost:5433/delicego'
+```
+
 ### Installation
 
 ```bash
@@ -235,7 +250,7 @@ Endpoint disponible :
 
 ```bash
 cd delicego/backend
-pytest
+DATABASE_URL='postgresql+asyncpg://delicego:delicego@localhost:5432/delicego' pytest
 ```
 
 > Note : ce projet n’expose **aucune API métier** pour l’instant (uniquement `/health`).

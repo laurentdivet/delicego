@@ -23,7 +23,14 @@ def test_internal_impact_dashboard_magasin_filter_smoke() -> None:
     from app.core.configuration import parametres_application
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-    engine = create_async_engine(parametres_application.url_base_donnees, pool_pre_ping=True)
+    url_db = os.getenv("DATABASE_URL")
+    if not url_db:
+        raise RuntimeError(
+            "DATABASE_URL is required to run DB tests. "
+            "Example: DATABASE_URL='postgresql+asyncpg://user:pass@localhost:5432/dbname' pytest"
+        )
+
+    engine = create_async_engine(url_db, pool_pre_ping=True)
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
     import asyncio

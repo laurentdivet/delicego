@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+import os
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import (
@@ -14,6 +15,24 @@ from app.core.configuration import parametres_application
 from app.domaine.modeles import BaseModele  # importe aussi tous les modèles
 
 
+def _database_url_for_tests() -> str:
+    """URL DB pour les tests.
+
+    Règle: DATABASE_URL est l'unique source de vérité.
+
+    On explicite un message clair si absent, pour éviter tout fallback implicite
+    (ex: localhost:5433) qui casse la portabilité et la CI.
+    """
+
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        raise RuntimeError(
+            "DATABASE_URL is required to run DB tests. "
+            "Example: DATABASE_URL='postgresql+asyncpg://user:pass@localhost:5432/dbname' pytest"
+        )
+    return url
+
+
 @pytest_asyncio.fixture
 async def moteur_test() -> AsyncIterator[AsyncEngine]:
     """Moteur de base de données pour les tests.
@@ -22,10 +41,10 @@ async def moteur_test() -> AsyncIterator[AsyncEngine]:
     un moteur async ne doit jamais être partagé entre plusieurs event loops.
     """
 
-    moteur = create_async_engine(
-        parametres_application.url_base_donnees,
-        pool_pre_ping=True,
-    )
+    # NOTE: en tests on ne lit PAS parametres_application.url_base_donnees car cette valeur
+    # peut avoir été initialisée avant que l'env DATABASE_URL ne soit injecté.
+    # (et surtout: on refuse tout fallback implicite).
+    moteur = create_async_engine(_database_url_for_tests(), pool_pre_ping=True)
 
     async with moteur.begin() as connexion:
         # Repartir d’un schéma propre à chaque test

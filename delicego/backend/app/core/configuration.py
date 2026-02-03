@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,7 +14,12 @@ class ParametresApplication(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    url_base_donnees: str = "postgresql+asyncpg://delicego:delicego@localhost:5433/delicego"
+    # IMPORTANT: pour rendre les tests/CI portables, DATABASE_URL doit être la source de vérité.
+    # On conserve un défaut "dev" seulement si DATABASE_URL n'est pas défini.
+    url_base_donnees: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql+asyncpg://delicego:delicego@localhost:5433/delicego",
+    )
 
     # ===== Impact KPIs =====
     # Seuil (km) pour considérer un fournisseur comme "local".

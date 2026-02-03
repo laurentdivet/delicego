@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import select
@@ -27,8 +28,9 @@ async def seed_demo() -> None:
     Ainsi l'endpoint /api/client/menus renvoie `disponible=true`.
     """
 
-    # En test, on évite les problèmes de schéma/connexion en réutilisant DATABASE_URL de l'environnement.
-    engine = create_async_engine(parametres_application.url_base_donnees, pool_pre_ping=True)
+    # DATABASE_URL est la source de vérité.
+    url_db = os.getenv("DATABASE_URL") or parametres_application.url_base_donnees
+    engine = create_async_engine(url_db, pool_pre_ping=True)
     session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
     async with session_maker() as session:
