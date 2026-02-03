@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from uuid import uuid4
 
-from sqlalchemy import Date, DateTime, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import Date, DateTime, ForeignKey, Index, SmallInteger, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -160,6 +160,18 @@ class ImpactAction(ModeleHorodate):
     created_by: Mapped[str | None] = mapped_column(String(120), nullable=True)
     expected_impact: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    # B3: actions exploitables
+    assignee: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # convention: 1=LOW, 2=MEDIUM, 3=HIGH
+    priority: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.utcnow,
+        comment="Horodatage applicatif (remplace/complète mis_a_jour_le).",
+    )
 
     recommendation_event: Mapped[ImpactRecommendationEvent] = relationship(
         "ImpactRecommendationEvent",

@@ -21,6 +21,11 @@ export type ImpactDashboardAction = {
   id: string
   status: string
   description?: string | null
+  assignee?: string | null
+  due_date?: string | null
+  priority?: number | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 export type ImpactDashboardRecommendation = {
@@ -77,6 +82,9 @@ export type ImpactDashboardResponse = {
 export type ImpactActionCreateRequest = {
   action_type: string
   description?: string | null
+  assignee?: string | null
+  due_date?: string | null
+  priority?: 1 | 2 | 3 | null
 }
 
 export type ImpactActionResponse = {
@@ -86,11 +94,18 @@ export type ImpactActionResponse = {
   description?: string | null
   status: string
   created_at: string
+  updated_at?: string | null
+  assignee?: string | null
+  due_date?: string | null
+  priority?: number | null
 }
 
 export type ImpactActionPatchRequest = {
   status?: 'OPEN' | 'DONE' | 'CANCELLED'
   description?: string | null
+  assignee?: string | null
+  due_date?: string | null
+  priority?: 1 | 2 | 3 | null
 }
 
 export type ImpactRecommendationStatusUpdateRequest = {

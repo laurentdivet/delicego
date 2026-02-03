@@ -21,11 +21,19 @@ export type ImpactDashboardAction = {
   id: string
   status: string
   description?: string | null
+  assignee?: string | null
+  due_date?: string | null
+  priority?: number | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 export type ImpactActionCreateRequest = {
   action_type: string
   description?: string | null
+  assignee?: string | null
+  due_date?: string | null // YYYY-MM-DD
+  priority?: 1 | 2 | 3 | null
   // created_by / expected_impact / status existent côté backend mais non requis pour l'UX simple
 }
 
@@ -36,11 +44,18 @@ export type ImpactActionResponse = {
   description?: string | null
   status: string
   created_at: string
+  updated_at?: string | null
+  assignee?: string | null
+  due_date?: string | null
+  priority?: number | null
 }
 
 export type ImpactActionPatchRequest = {
   status?: 'OPEN' | 'DONE' | 'CANCELLED'
   description?: string | null
+  assignee?: string | null
+  due_date?: string | null
+  priority?: 1 | 2 | 3 | null
 }
 
 export type ImpactRecommendationStatusUpdateRequest = {
@@ -154,6 +169,38 @@ export async function patchImpactRecommendation(
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
+}
+
+// ==============================
+// Impact export CSV (API interne)
+// ==============================
+
+export async function telechargerImpactActionsCsv(params?: {
+  days?: number
+  magasin_id?: string | null
+  status?: 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED' | null
+  severity?: 'LOW' | 'MEDIUM' | 'HIGH' | null
+  action_status?: 'OPEN' | 'DONE' | 'CANCELLED' | null
+}): Promise<Blob> {
+  const qs = new URLSearchParams()
+  if (params?.days != null) qs.set('days', String(params.days))
+  if (params?.magasin_id) qs.set('magasin_id', String(params.magasin_id))
+  if (params?.status) qs.set('status', String(params.status))
+  if (params?.severity) qs.set('severity', String(params.severity))
+  if (params?.action_status) qs.set('action_status', String(params.action_status))
+  const suffix = qs.toString() ? `?${qs.toString()}` : ''
+
+  const token = lireToken()
+  const reponse = await fetch(`/api/interne/impact/export/actions.csv${suffix}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+  if (!reponse.ok) {
+    const message = await lireErreur(reponse)
+    throw { statut_http: reponse.status, message } satisfies ErreurApi
+  }
+  return await reponse.blob()
 }
 
 function lireToken(): string | null {

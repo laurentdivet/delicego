@@ -14,6 +14,7 @@ import {
   creerImpactAction,
   patchImpactAction,
   patchImpactRecommendation,
+  telechargerImpactActionsCsv,
   lireMagasins,
   type MagasinListItem,
 } from '../api/interne'
@@ -57,6 +58,38 @@ function formatDateHeure(iso: string) {
   } catch {
     return iso
   }
+}
+
+function formatDateCourt(iso?: string | null): string {
+  if (!iso) return '—'
+  // accepte YYYY-MM-DD
+  try {
+    const d = iso.includes('T') ? new Date(iso) : new Date(`${iso}T00:00:00`)
+    return d.toLocaleDateString('fr-FR')
+  } catch {
+    return iso
+  }
+}
+
+function isOverdue(due_date?: string | null): boolean {
+  if (!due_date) return false
+  try {
+    const today = new Date()
+    const d = new Date(`${due_date}T00:00:00`)
+    // overdue if strictly before today (ignore time)
+    const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+    const d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+    return d0 < t0
+  } catch {
+    return false
+  }
+}
+
+function badgePriority(p?: number | null): { className: string; label: string } {
+  if (p === 3) return { className: 'bg-red-100 text-red-800 border-red-200', label: 'HIGH' }
+  if (p === 2) return { className: 'bg-amber-100 text-amber-800 border-amber-200', label: 'MEDIUM' }
+  if (p === 1) return { className: 'bg-slate-100 text-slate-700 border-slate-200', label: 'LOW' }
+  return { className: 'bg-slate-50 text-slate-500 border-slate-200', label: '—' }
 }
 
 function badgeSeverity(severity: string): { className: string; label: string } {
@@ -243,7 +276,38 @@ function RecoActions({ r, internal }: { r: ImpactDashboardRecommendation; intern
             <option value="DONE">DONE</option>
             <option value="CANCELLED">CANCELLED</option>
           </select>
-          <span className="text-slate-700">{a.description || <span className="text-slate-400">(sans description)</span>}</span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              {a.priority != null && (
+                <span className={['inline-flex items-center rounded border px-2 py-0.5 font-medium', badgePriority(a.priority).className].join(' ')}>
+                  {badgePriority(a.priority).label}
+                </span>
+              )}
+              {a.due_date && (
+                <span
+                  className={
+                    [
+                      'inline-flex items-center rounded border px-2 py-0.5 font-medium',
+                      isOverdue(a.due_date)
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : 'bg-slate-50 text-slate-700 border-slate-200',
+                    ].join(' ')
+                  }
+                  title={isOverdue(a.due_date) ? 'En retard' : 'Échéance'}
+                >
+                  {formatDateCourt(a.due_date)}{isOverdue(a.due_date) ? ' • en retard' : ''}
+                </span>
+              )}
+              {a.assignee && (
+                <span className="inline-flex items-center rounded border border-slate-200 bg-white px-2 py-0.5 font-medium text-slate-700">
+                  {a.assignee}
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5 text-slate-700">
+              {a.description || <span className="text-slate-400">(sans description)</span>}
+            </div>
+          </div>
         </li>
       ))}
       {r.actions.length > 6 && <li className="text-xs text-slate-500">… +{r.actions.length - 6} autres</li>}
@@ -292,6 +356,9 @@ export function ImpactDashboard() {
   const [modalRecoId, setModalRecoId] = useState<string | null>(null)
   const [newActionType, setNewActionType] = useState('MANUAL')
   const [newActionDesc, setNewActionDesc] = useState('')
+  const [newActionAssignee, setNewActionAssignee] = useState('')
+  const [newActionDueDate, setNewActionDueDate] = useState('')
+  const [newActionPriority, setNewActionPriority] = useState<'1' | '2' | '3' | ''>('')
   const [saving, setSaving] = useState(false)
 
   const [messageSucces, setMessageSucces] = useState<string | null>(null)
@@ -511,6 +578,38 @@ export function ImpactDashboard() {
           >
             {loading ? 'Rafraîchissement…' : 'Rafraîchir'}
           </button>
+
+          {internal && (
+            <button
+              type="button"
+              className="rounded-md border bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              onClick={async () => {
+                setErreur(null)
+                try {
+                  const blob = await telechargerImpactActionsCsv({
+                    days,
+                    magasin_id: magasinId,
+                    status: recoStatus || null,
+                    severity: recoSeverity || null,
+                  })
+                  const url = window.URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `impact-actions-${new Date().toISOString().slice(0, 10)}.csv`
+                  document.body.appendChild(a)
+                  a.click()
+                  a.remove()
+                  window.URL.revokeObjectURL(url)
+                } catch (e: unknown) {
+                  const err = e as { message?: string }
+                  setErreur(err?.message || "Erreur: export CSV")
+                }
+              }}
+              title="Exporter les actions en CSV (API interne)"
+            >
+              Exporter actions CSV
+            </button>
+          )}
         </div>
       </div>
 
@@ -823,6 +922,9 @@ export function ImpactDashboard() {
                         setModalRecoId(r.id)
                         setNewActionType('MANUAL')
                         setNewActionDesc('')
+                        setNewActionAssignee('')
+                        setNewActionDueDate('')
+                        setNewActionPriority('')
                         setModalOpen(true)
                       }}
                     >
@@ -882,6 +984,46 @@ export function ImpactDashboard() {
             />
           </div>
 
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="md:col-span-1">
+              <label className="block text-xs font-medium text-slate-600">Assigné à</label>
+              <input
+                className="mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm"
+                value={newActionAssignee}
+                onChange={(e) => setNewActionAssignee(e.target.value)}
+                placeholder="Nom (optionnel)"
+                aria-label="Assigné à"
+                title="Assigné à"
+              />
+            </div>
+            <div className="md:col-span-1">
+              <label className="block text-xs font-medium text-slate-600">Échéance</label>
+              <input
+                type="date"
+                className="mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm"
+                value={newActionDueDate}
+                onChange={(e) => setNewActionDueDate(e.target.value)}
+                aria-label="Échéance"
+                title="Échéance"
+              />
+            </div>
+            <div className="md:col-span-1">
+              <label className="block text-xs font-medium text-slate-600">Priorité</label>
+              <select
+                className="mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm"
+                value={newActionPriority}
+                onChange={(e) => setNewActionPriority(e.target.value as typeof newActionPriority)}
+                aria-label="Priorité"
+                title="Priorité"
+              >
+                <option value="">—</option>
+                <option value="1">LOW</option>
+                <option value="2">MEDIUM</option>
+                <option value="3">HIGH</option>
+              </select>
+            </div>
+          </div>
+
           {erreur && <div className="rounded border border-red-200 bg-red-50 p-2 text-xs text-red-700">{erreur}</div>}
 
           <div className="flex justify-end gap-2">
@@ -907,11 +1049,17 @@ export function ImpactDashboard() {
                     await creerImpactAction(modalRecoId, {
                       action_type: newActionType,
                       description: newActionDesc.trim() ? newActionDesc.trim() : null,
+                      assignee: newActionAssignee.trim() ? newActionAssignee.trim() : null,
+                      due_date: newActionDueDate || null,
+                      priority: (newActionPriority ? (Number(newActionPriority) as 1 | 2 | 3) : null) as 1 | 2 | 3 | null,
                     })
                   } else {
                     await creerImpactActionPublic(modalRecoId, {
                       action_type: newActionType,
                       description: newActionDesc.trim() ? newActionDesc.trim() : null,
+                      assignee: newActionAssignee.trim() ? newActionAssignee.trim() : null,
+                      due_date: newActionDueDate || null,
+                      priority: (newActionPriority ? (Number(newActionPriority) as 1 | 2 | 3) : null) as 1 | 2 | 3 | null,
                     })
                   }
                   setModalOpen(false)

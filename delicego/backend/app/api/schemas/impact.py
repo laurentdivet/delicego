@@ -51,6 +51,11 @@ class ImpactDashboardActionSchema(BaseModel):
     id: str
     status: str
     description: str | None = None
+    assignee: str | None = None
+    due_date: date | None = None
+    priority: int | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class ImpactDashboardRecommendationSchema(BaseModel):
@@ -144,11 +149,17 @@ class ImpactDashboardResponse(BaseModel):
 class ImpactActionCreateBody(BaseModel):
     action_type: str = Field(description="CHANGE_SUPPLIER|ADJUST_QUANTITY|REMOVE_MENU|TRAINING|OTHER")
     description: str | None = Field(default=None)
+    assignee: str | None = Field(default=None, max_length=120)
+    due_date: date | None = Field(default=None)
+    priority: int | None = Field(default=None, description="1=LOW,2=MEDIUM,3=HIGH")
 
 
 class ImpactActionPatchBody(BaseModel):
     status: str | None = Field(default=None, description="OPEN|DONE|CANCELLED")
     description: str | None = Field(default=None)
+    assignee: str | None = Field(default=None, max_length=120)
+    due_date: date | None = Field(default=None)
+    priority: int | None = Field(default=None, description="1=LOW,2=MEDIUM,3=HIGH")
 
 
 class ImpactRecommendationPatchBody(BaseModel):
@@ -163,3 +174,7 @@ class ImpactActionSchema(BaseModel):
     description: str | None = None
     status: str
     created_at: datetime
+    updated_at: datetime | None = None
+    assignee: str | None = None
+    due_date: date | None = None
+    priority: int | None = None
