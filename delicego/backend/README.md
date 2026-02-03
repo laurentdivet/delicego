@@ -31,6 +31,39 @@ Notes:
 - La CI est en "Solution 2": aucun ENUM PostgreSQL natif attendu.
 - La migration `zzzz` n'est pas downgradable => aucun downgrade n'est exécuté en CI.
 
+## Import catalogue XLSX
+
+Le backend peut importer un fichier catalogue `.xlsx` (fournisseurs / produits / produit_fournisseur) et produire des rapports CSV de mapping ingrédients.
+
+Prérequis:
+- **DATABASE_URL obligatoire** (ou `--database-url`) pour éviter de cibler une mauvaise base.
+
+### Dry-run (aucune écriture en DB)
+
+```bash
+DATABASE_URL='postgresql+asyncpg://delicego:delicego@localhost:5432/delicego' \
+python -m scripts.import_catalog_xlsx --path ./tests/fixtures/catalog_min.xlsx --dry-run
+```
+
+### Apply (transaction atomique)
+
+```bash
+DATABASE_URL='postgresql+asyncpg://delicego:delicego@localhost:5432/delicego' \
+python -m scripts.import_catalog_xlsx --path ./tests/fixtures/catalog_min.xlsx --apply
+```
+
+### Rapports
+
+Par défaut, les rapports sont écrits dans:
+
+- `backend/scripts/reports/<YYYYMMDD_HHMMSS>/`
+
+Fichiers produits:
+- `ingredient_alias_load_report.csv`
+- `ingredient_unmapped_summary.csv`
+- `ingredients_non_mappes.csv`
+- `ingredient_mapped.csv`
+
 ## Prévisions (pipeline ML ventes → besoins ingrédients)
 
 Le backend inclut un pipeline ML simple (XGBoost) qui :
