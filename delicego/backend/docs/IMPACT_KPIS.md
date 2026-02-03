@@ -17,6 +17,34 @@ Routes internes (header `X-CLE-INTERNE`).
 - `GET /api/interne/impact/local?days=30&local_km_threshold=100`
 - `GET /api/interne/impact/co2?days=30`
 
+## Dashboard Impact (pilotage quotidien)
+
+Endpoints dashboard (KPIs + reco/actions) :
+
+- Interne (protégé Bearer): `GET /api/interne/impact/dashboard?days=30&limit=200`
+- Public (DEV-only): `GET /api/impact/dashboard?days=30&limit=200`
+
+### Filtrage multi-magasins
+
+Paramètre optionnel : `magasin_id` (UUID).
+
+- si `magasin_id` est fourni : KPIs + recommandations/actions sont filtrées sur ce magasin
+- sinon : comportement global (tous magasins)
+
+### Filtres / tri côté serveur (recommandations)
+
+Paramètres optionnels :
+
+- `status`: `OPEN|ACKNOWLEDGED|RESOLVED`
+- `severity`: `LOW|MEDIUM|HIGH`
+- `sort`: `last_seen_desc` (défaut) ou `occurrences_desc`
+- `limit`: déjà présent (défaut 200)
+
+### Endpoint magasins (pour l'UI)
+
+- `GET /api/interne/magasins` (protégé Bearer)
+- Retour: `[{id, nom}]`
+
 Chaque endpoint renvoie un JSON stable avec :
 
 - des agrégats (`value`)
@@ -105,4 +133,14 @@ curl -H 'X-CLE-INTERNE: cle-technique' 'http://localhost:8000/api/interne/impact
 curl -H 'X-CLE-INTERNE: cle-technique' 'http://localhost:8000/api/interne/impact/waste?days=30'
 curl -H 'X-CLE-INTERNE: cle-technique' 'http://localhost:8000/api/interne/impact/local?days=30&local_km_threshold=100'
 curl -H 'X-CLE-INTERNE: cle-technique' 'http://localhost:8000/api/interne/impact/co2?days=30'
+
+# Dashboard interne
+curl -H 'Authorization: Bearer <token>' 'http://localhost:8000/api/interne/impact/dashboard?days=30&limit=200'
+
+# Dashboard interne filtré magasin + filtres reco
+curl -H 'Authorization: Bearer <token>' \
+  'http://localhost:8000/api/interne/impact/dashboard?days=30&limit=200&magasin_id=<uuid>&status=OPEN&severity=HIGH&sort=occurrences_desc'
+
+# Liste magasins (interne)
+curl -H 'Authorization: Bearer <token>' 'http://localhost:8000/api/interne/magasins'
 ```

@@ -57,6 +57,10 @@ routeur_impact_interne = APIRouter(
 async def impact_dashboard_interne_endpoint(
     days: int = Query(default=30, ge=1, le=365),
     limit: int = Query(default=200, ge=1, le=5000),
+    magasin_id: UUID | None = Query(default=None),
+    status: str | None = Query(default=None, description="OPEN|ACKNOWLEDGED|RESOLVED"),
+    severity: str | None = Query(default=None, description="LOW|MEDIUM|HIGH"),
+    sort: str = Query(default="last_seen_desc", description="last_seen_desc|occurrences_desc"),
     session: AsyncSession = Depends(fournir_session),
 ) -> ImpactDashboardResponse:
     """Dashboard interne protégé.
@@ -68,23 +72,38 @@ async def impact_dashboard_interne_endpoint(
     """
 
     # --- KPIs (déjà implémentés)
-    waste = await kpi_waste_rate(session, days=days)
+    waste = await kpi_waste_rate(session, days=days, magasin_id=magasin_id)
     local = await kpi_local_share(
         session,
         days=days,
+        magasin_id=magasin_id,
         local_km_threshold=parametres_application.impact_local_km_threshold,
     )
-    co2 = await kpi_co2_estimate(session, days=days)
+    co2 = await kpi_co2_estimate(session, days=days, magasin_id=magasin_id)
 
     # --- Recommendations + actions (ORM)
-    reco_events = (
-        await session.execute(
-            select(ImpactRecommendationEvent)
-            .options(selectinload(ImpactRecommendationEvent.actions))
-            .order_by(ImpactRecommendationEvent.last_seen_at.desc())
-            .limit(int(limit))
-        )
-    ).scalars().all()
+    q = select(ImpactRecommendationEvent).options(selectinload(ImpactRecommendationEvent.actions))
+    # magasin filter: either direct column (if exists) or entities JSONB contains.
+    if magasin_id is not None:
+        if hasattr(ImpactRecommendationEvent, "magasin_id"):
+            q = q.where(getattr(ImpactRecommendationEvent, "magasin_id") == magasin_id)
+        else:
+            # convention: entities.magasin_id = <uuid>
+            q = q.where(ImpactRecommendationEvent.entities["magasin_id"].astext == str(magasin_id))
+
+    if status is not None:
+        q = q.where(ImpactRecommendationEvent.status == status)
+    if severity is not None:
+        q = q.where(ImpactRecommendationEvent.severity == severity)
+
+    sort_key = (sort or "").strip().lower()
+    if sort_key == "occurrences_desc":
+        q = q.order_by(ImpactRecommendationEvent.occurrences.desc(), ImpactRecommendationEvent.last_seen_at.desc())
+    else:
+        q = q.order_by(ImpactRecommendationEvent.last_seen_at.desc())
+
+    q = q.limit(int(limit))
+    reco_events = (await session.execute(q)).scalars().all()
 
     recommendations = []
     for r in reco_events:
@@ -124,6 +143,10 @@ async def impact_dashboard_interne_endpoint(
 async def impact_dashboard_public_endpoint(
     days: int = Query(default=30, ge=1, le=365),
     limit: int = Query(default=200, ge=1, le=5000),
+    magasin_id: UUID | None = Query(default=None),
+    status: str | None = Query(default=None, description="OPEN|ACKNOWLEDGED|RESOLVED"),
+    severity: str | None = Query(default=None, description="LOW|MEDIUM|HIGH"),
+    sort: str = Query(default="last_seen_desc", description="last_seen_desc|occurrences_desc"),
     session: AsyncSession = Depends(fournir_session),
 ) -> ImpactDashboardResponse:
     """Dashboard public DEV-only.
@@ -140,23 +163,36 @@ async def impact_dashboard_public_endpoint(
     """
 
     # --- KPIs (déjà implémentés)
-    waste = await kpi_waste_rate(session, days=days)
+    waste = await kpi_waste_rate(session, days=days, magasin_id=magasin_id)
     local = await kpi_local_share(
         session,
         days=days,
+        magasin_id=magasin_id,
         local_km_threshold=parametres_application.impact_local_km_threshold,
     )
-    co2 = await kpi_co2_estimate(session, days=days)
+    co2 = await kpi_co2_estimate(session, days=days, magasin_id=magasin_id)
 
     # --- Recommendations + actions (ORM)
-    reco_events = (
-        await session.execute(
-            select(ImpactRecommendationEvent)
-            .options(selectinload(ImpactRecommendationEvent.actions))
-            .order_by(ImpactRecommendationEvent.last_seen_at.desc())
-            .limit(int(limit))
-        )
-    ).scalars().all()
+    q = select(ImpactRecommendationEvent).options(selectinload(ImpactRecommendationEvent.actions))
+    if magasin_id is not None:
+        if hasattr(ImpactRecommendationEvent, "magasin_id"):
+            q = q.where(getattr(ImpactRecommendationEvent, "magasin_id") == magasin_id)
+        else:
+            q = q.where(ImpactRecommendationEvent.entities["magasin_id"].astext == str(magasin_id))
+
+    if status is not None:
+        q = q.where(ImpactRecommendationEvent.status == status)
+    if severity is not None:
+        q = q.where(ImpactRecommendationEvent.severity == severity)
+
+    sort_key = (sort or "").strip().lower()
+    if sort_key == "occurrences_desc":
+        q = q.order_by(ImpactRecommendationEvent.occurrences.desc(), ImpactRecommendationEvent.last_seen_at.desc())
+    else:
+        q = q.order_by(ImpactRecommendationEvent.last_seen_at.desc())
+
+    q = q.limit(int(limit))
+    reco_events = (await session.execute(q)).scalars().all()
 
     recommendations = []
     for r in reco_events:

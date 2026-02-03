@@ -14,6 +14,8 @@ import {
   creerImpactAction,
   patchImpactAction,
   patchImpactRecommendation,
+  lireMagasins,
+  type MagasinListItem,
 } from '../api/interne'
 
 function boolEnv(v: unknown): boolean {
@@ -143,6 +145,13 @@ export function ImpactDashboard() {
   const [days, setDays] = useState<number>(30)
   const [limit, setLimit] = useState<number>(200)
 
+  // filtres dashboard (querystring + localStorage)
+  const [magasins, setMagasins] = useState<MagasinListItem[]>([])
+  const [magasinId, setMagasinId] = useState<string | null>(null)
+  const [recoStatus, setRecoStatus] = useState<'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED' | ''>('')
+  const [recoSeverity, setRecoSeverity] = useState<'LOW' | 'MEDIUM' | 'HIGH' | ''>('')
+  const [recoSort, setRecoSort] = useState<'last_seen_desc' | 'occurrences_desc'>('last_seen_desc')
+
   // UI "Accès interne" (pas de login): stockage local uniquement.
   const [internalTokenInput, setInternalTokenInput] = useState<string>(() => localStorage.getItem('INTERNAL_TOKEN') || '')
   const [internalTokenSavedAt, setInternalTokenSavedAt] = useState<string | null>(null)
@@ -161,12 +170,86 @@ export function ImpactDashboard() {
   const [messageSucces, setMessageSucces] = useState<string | null>(null)
   const [editionDesactivee, setEditionDesactivee] = useState(false)
 
+  // init from URL / localStorage
+  useEffect(() => {
+    const qs = new URLSearchParams(window.location.search)
+    const qsMagasin = qs.get('magasin_id')
+    const savedMagasin = localStorage.getItem('IMPACT_MAGASIN_ID')
+    const initialMagasin = qsMagasin || savedMagasin
+    setMagasinId(initialMagasin && initialMagasin !== 'GLOBAL' ? initialMagasin : null)
+
+    const qsStatus = (qs.get('status') || '').toUpperCase()
+    if (qsStatus === 'OPEN' || qsStatus === 'ACKNOWLEDGED' || qsStatus === 'RESOLVED') setRecoStatus(qsStatus)
+    const qsSeverity = (qs.get('severity') || '').toUpperCase()
+    if (qsSeverity === 'LOW' || qsSeverity === 'MEDIUM' || qsSeverity === 'HIGH') setRecoSeverity(qsSeverity)
+    const qsSort = (qs.get('sort') || '').toLowerCase()
+    if (qsSort === 'occurrences_desc' || qsSort === 'last_seen_desc') setRecoSort(qsSort)
+  }, [])
+
+  // load magasins for internal mode
+  useEffect(() => {
+    if (!internal) return
+    ;(async () => {
+      try {
+        const m = await lireMagasins()
+        setMagasins(m)
+      } catch {
+        // non bloquant
+        setMagasins([])
+      }
+    })()
+  }, [internal])
+
+  const scopeLabel = useMemo(() => {
+    if (!magasinId) return 'GLOBAL'
+    const m = magasins.find((x) => x.id === magasinId)
+    return m ? m.nom : magasinId
+  }, [magasinId, magasins])
+
+  const syncUrlAndStorage = useCallback(
+    (next: { magasin_id?: string | null; status?: string; severity?: string; sort?: string }) => {
+      const qs = new URLSearchParams(window.location.search)
+      if ('magasin_id' in next) {
+        if (next.magasin_id) {
+          qs.set('magasin_id', next.magasin_id)
+          localStorage.setItem('IMPACT_MAGASIN_ID', next.magasin_id)
+        } else {
+          qs.delete('magasin_id')
+          localStorage.setItem('IMPACT_MAGASIN_ID', 'GLOBAL')
+        }
+      }
+      if ('status' in next) {
+        if (next.status) qs.set('status', next.status)
+        else qs.delete('status')
+      }
+      if ('severity' in next) {
+        if (next.severity) qs.set('severity', next.severity)
+        else qs.delete('severity')
+      }
+      if ('sort' in next) {
+        if (next.sort) qs.set('sort', next.sort)
+        else qs.delete('sort')
+      }
+      const url = `${window.location.pathname}${qs.toString() ? `?${qs.toString()}` : ''}`
+      window.history.replaceState({}, '', url)
+    },
+    []
+  )
+
   const charger = useCallback(async () => {
     setLoading(true)
     setErreur(null)
     setMessageSucces(null)
     try {
-      const d = internal ? await lireImpactDashboard({ days, limit }) : await lireImpactDashboardPublic({ days, limit })
+      const params = {
+        days,
+        limit,
+        magasin_id: magasinId,
+        status: recoStatus || null,
+        severity: recoSeverity || null,
+        sort: recoSort || null,
+      } as const
+      const d = internal ? await lireImpactDashboard(params) : await lireImpactDashboardPublic(params)
       setData(d)
       setLastRefreshAt(new Date().toISOString())
       setEditionDesactivee(false)
@@ -190,7 +273,7 @@ export function ImpactDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [days, limit])
+  }, [days, limit, magasinId, recoStatus, recoSeverity, recoSort, internal])
 
   useEffect(() => {
     charger()
@@ -324,6 +407,100 @@ export function ImpactDashboard() {
           <div className="text-sm font-semibold">Résumé</div>
           <div className="text-xs text-slate-500">
             API: {internal ? '/api/interne/impact/dashboard' : '/api/impact/dashboard'} • {loading ? 'Mise à jour…' : lastRefreshAt ? `Dernier refresh: ${formatDateHeure(lastRefreshAt)}` : '—'}
+          </div>
+        </div>
+
+        <div className="mt-2 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div className="text-xs text-slate-600">
+            Scope: <span className="font-semibold">{scopeLabel}</span>
+          </div>
+
+          <div className="flex flex-col gap-2 md:flex-row md:items-end">
+            <div>
+              <label className="block text-xs font-medium text-slate-600">Magasin</label>
+              <select
+                className="mt-1 w-56 rounded-md border bg-white px-3 py-2 text-sm disabled:opacity-60"
+                value={magasinId || ''}
+                disabled={!internal}
+                onChange={(e) => {
+                  const next = e.target.value || null
+                  setMagasinId(next)
+                  syncUrlAndStorage({ magasin_id: next })
+                  window.dispatchEvent(new CustomEvent('impact:refresh'))
+                }}
+                aria-label="Magasin"
+                title={internal ? 'Filtrer par magasin' : 'Disponible uniquement en mode interne'}
+              >
+                <option value="">GLOBAL</option>
+                {magasins.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nom}
+                  </option>
+                ))}
+              </select>
+              {!internal && <div className="mt-1 text-[11px] text-slate-500">Le filtre magasin est disponible en mode API interne.</div>}
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-600">Statut</label>
+              <select
+                className="mt-1 w-40 rounded-md border bg-white px-3 py-2 text-sm"
+                value={recoStatus}
+                aria-label="Filtre statut recommandations"
+                title="Filtrer par statut"
+                onChange={(e) => {
+                  const v = (e.target.value || '') as typeof recoStatus
+                  setRecoStatus(v)
+                  syncUrlAndStorage({ status: v || '' })
+                  window.dispatchEvent(new CustomEvent('impact:refresh'))
+                }}
+              >
+                <option value="">Tous</option>
+                <option value="OPEN">OPEN</option>
+                <option value="ACKNOWLEDGED">ACK</option>
+                <option value="RESOLVED">RESOLVED</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-600">Sévérité</label>
+              <select
+                className="mt-1 w-40 rounded-md border bg-white px-3 py-2 text-sm"
+                value={recoSeverity}
+                aria-label="Filtre sévérité recommandations"
+                title="Filtrer par sévérité"
+                onChange={(e) => {
+                  const v = (e.target.value || '') as typeof recoSeverity
+                  setRecoSeverity(v)
+                  syncUrlAndStorage({ severity: v || '' })
+                  window.dispatchEvent(new CustomEvent('impact:refresh'))
+                }}
+              >
+                <option value="">Toutes</option>
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-600">Tri</label>
+              <select
+                className="mt-1 w-56 rounded-md border bg-white px-3 py-2 text-sm"
+                value={recoSort}
+                aria-label="Tri recommandations"
+                title="Trier les recommandations"
+                onChange={(e) => {
+                  const v = (e.target.value || 'last_seen_desc') as typeof recoSort
+                  setRecoSort(v)
+                  syncUrlAndStorage({ sort: v })
+                  window.dispatchEvent(new CustomEvent('impact:refresh'))
+                }}
+              >
+                <option value="last_seen_desc">Dernier vu</option>
+                <option value="occurrences_desc">Occurrences</option>
+              </select>
+            </div>
           </div>
         </div>
 

@@ -80,12 +80,33 @@ export type ImpactDashboardResponse = {
 export async function lireImpactDashboard(params?: {
   days?: number
   limit?: number
+  magasin_id?: string | null
+  status?: 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED' | null
+  severity?: 'LOW' | 'MEDIUM' | 'HIGH' | null
+  sort?: 'last_seen_desc' | 'occurrences_desc' | null
 }): Promise<ImpactDashboardResponse> {
   const qs = new URLSearchParams()
   if (params?.days != null) qs.set('days', String(params.days))
   if (params?.limit != null) qs.set('limit', String(params.limit))
+  if (params?.magasin_id) qs.set('magasin_id', String(params.magasin_id))
+  if (params?.status) qs.set('status', String(params.status))
+  if (params?.severity) qs.set('severity', String(params.severity))
+  if (params?.sort) qs.set('sort', String(params.sort))
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
   return requeteJson<ImpactDashboardResponse>(`/api/interne/impact/dashboard${suffix}`)
+}
+
+// ==============================
+// Magasins (liste pour UI)
+// ==============================
+
+export type MagasinListItem = {
+  id: string
+  nom: string
+}
+
+export async function lireMagasins(): Promise<MagasinListItem[]> {
+  return requeteJson<MagasinListItem[]>('/api/interne/magasins')
 }
 
 export async function creerImpactAction(
