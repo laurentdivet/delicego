@@ -12,6 +12,7 @@ import {
 import {
   lireImpactDashboard,
   creerImpactAction,
+  patchImpactAction,
   patchImpactRecommendation,
 } from '../api/interne'
 
@@ -78,7 +79,7 @@ function KpiMiniCard({ titre, valeur, sousTitre }: { titre: string; valeur: stri
   )
 }
 
-function RecoActions({ r }: { r: ImpactDashboardRecommendation }) {
+function RecoActions({ r, internal }: { r: ImpactDashboardRecommendation; internal: boolean }) {
   if (!r.actions || r.actions.length === 0) {
     return <div className="text-xs text-slate-500">Aucune action</div>
   }
@@ -170,17 +171,22 @@ export function ImpactDashboard() {
       setLastRefreshAt(new Date().toISOString())
       setEditionDesactivee(false)
     } catch (e: unknown) {
-      const err = e as { message?: string }
-      const msg = err?.message || 'Erreur de chargement (impact dashboard)'
-      setErreur(msg)
-      // Public: 403 si guard DEV-only off. Interne: 401 si token absent/invalid.
-      setEditionDesactivee(
-        msg.includes('403') ||
-          msg.includes('401') ||
-          msg.toLowerCase().includes('désactivé') ||
-          msg.toLowerCase().includes('forbidden') ||
-          msg.toLowerCase().includes('token')
-      )
+      const err = e as { statut_http?: number; message?: string }
+      if (internal && err?.statut_http === 401) {
+        setErreur('Token invalide ou absent')
+        setEditionDesactivee(true)
+      } else {
+        const msg = err?.message || 'Erreur de chargement (impact dashboard)'
+        setErreur(msg)
+        // Public: 403 si guard DEV-only off. Interne: 401 si token absent/invalid.
+        setEditionDesactivee(
+          msg.includes('403') ||
+            msg.includes('401') ||
+            msg.toLowerCase().includes('désactivé') ||
+            msg.toLowerCase().includes('forbidden') ||
+            msg.toLowerCase().includes('token')
+        )
+      }
     } finally {
       setLoading(false)
     }
@@ -459,7 +465,7 @@ export function ImpactDashboard() {
                   <td className="px-2 py-3 text-right tabular-nums">{r.occurrences}</td>
                   <td className="px-2 py-3 text-xs text-slate-600">{formatDateHeure(r.last_seen_at)}</td>
                   <td className="px-2 py-3">
-                    <RecoActions r={r} />
+                    <RecoActions r={r} internal={internal} />
                   </td>
                   <td className="px-2 py-3 text-right">
                     <button

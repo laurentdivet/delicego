@@ -53,6 +53,73 @@ routeur_impact_interne = APIRouter(
 )
 
 
+@routeur_impact_interne.get("/dashboard", response_model=ImpactDashboardResponse)
+async def impact_dashboard_interne_endpoint(
+    days: int = Query(default=30, ge=1, le=365),
+    limit: int = Query(default=200, ge=1, le=5000),
+    session: AsyncSession = Depends(fournir_session),
+) -> ImpactDashboardResponse:
+    """Dashboard interne protégé.
+
+    IMPORTANT: on réutilise EXACTEMENT la logique de l'endpoint public
+    `/api/impact/dashboard` (mais sans guard DEV-only).
+
+    La protection se fait via la dépendance router-level sur `/api/interne`.
+    """
+
+    # --- KPIs (déjà implémentés)
+    waste = await kpi_waste_rate(session, days=days)
+    local = await kpi_local_share(
+        session,
+        days=days,
+        local_km_threshold=parametres_application.impact_local_km_threshold,
+    )
+    co2 = await kpi_co2_estimate(session, days=days)
+
+    # --- Recommendations + actions (ORM)
+    reco_events = (
+        await session.execute(
+            select(ImpactRecommendationEvent)
+            .options(selectinload(ImpactRecommendationEvent.actions))
+            .order_by(ImpactRecommendationEvent.last_seen_at.desc())
+            .limit(int(limit))
+        )
+    ).scalars().all()
+
+    recommendations = []
+    for r in reco_events:
+        recommendations.append(
+            {
+                "id": str(r.id),
+                "code": r.code,
+                "severity": r.severity,
+                "status": r.status,
+                "occurrences": int(r.occurrences or 0),
+                "last_seen_at": r.last_seen_at,
+                "entities": r.entities,
+                "actions": [
+                    {
+                        "id": str(a.id),
+                        "status": a.status,
+                        "description": a.description,
+                    }
+                    for a in sorted(r.actions or [], key=lambda x: x.cree_le, reverse=True)
+                ],
+            }
+        )
+
+    return ImpactDashboardResponse(
+        kpis={
+            "days": days,
+            "waste_rate": waste.waste_rate,
+            "local_share": local.local_share,
+            "co2_kgco2e": co2.total_kgco2e,
+        },
+        alerts=[],
+        recommendations=recommendations,
+    )
+
+
 @routeur_impact_public.get("/dashboard", response_model=ImpactDashboardResponse)
 async def impact_dashboard_public_endpoint(
     days: int = Query(default=30, ge=1, le=365),

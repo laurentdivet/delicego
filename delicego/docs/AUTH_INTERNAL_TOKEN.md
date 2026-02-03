@@ -35,6 +35,53 @@ Avec token:
 curl -i \
   -H "Authorization: Bearer $INTERNAL_API_TOKEN" \
   "http://localhost:8000/api/interne/impact/dashboard?days=30&limit=200"
+
+```
+
+## API Impact interne (read + write)
+
+### Lire le dashboard
+
+```bash
+curl -s \
+  -H "Authorization: Bearer $INTERNAL_API_TOKEN" \
+  "http://localhost:8000/api/interne/impact/dashboard?days=30&limit=200" | jq
+```
+
+### Créer une action sur une recommandation
+
+```bash
+RECO_ID='<uuid-recommendation-event>'
+
+curl -s -X POST \
+  -H "Authorization: Bearer $INTERNAL_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  "http://localhost:8000/api/interne/impact/recommendations/${RECO_ID}/actions" \
+  -d '{"action_type":"MANUAL","description":"Appeler le fournisseur"}' | jq
+```
+
+### Mettre à jour une action
+
+```bash
+ACTION_ID='<uuid-action>'
+
+curl -s -X PATCH \
+  -H "Authorization: Bearer $INTERNAL_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  "http://localhost:8000/api/interne/impact/actions/${ACTION_ID}" \
+  -d '{"status":"DONE"}' | jq
+```
+
+### Mettre à jour une recommandation
+
+```bash
+RECO_ID='<uuid-recommendation-event>'
+
+curl -s -X PATCH \
+  -H "Authorization: Bearer $INTERNAL_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  "http://localhost:8000/api/interne/impact/recommendations/${RECO_ID}" \
+  -d '{"status":"ACKNOWLEDGED","comment":"Pris en compte"}' | jq
 ```
 
 ## Frontend (Vite)
