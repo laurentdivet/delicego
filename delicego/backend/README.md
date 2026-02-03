@@ -61,7 +61,8 @@ Notes :
 ### Inference / génération des prédictions
 
 ```bash
-python -m scripts.predict_sales --horizon 7
+DATABASE_URL='postgresql+asyncpg://delicego:delicego@localhost:5432/delicego' \
+python scripts/run_forecast.py --horizon 7
 ```
 
 Options utiles :

@@ -84,6 +84,9 @@ def main() -> int:
     # 1) migrations
     _run(["alembic", "-c", "alembic.ini", "upgrade", "head"], env={**os.environ, "DATABASE_URL": conn.database_url})
 
+    # Le script est prévu pour tourner en GitHub Actions (Postgres service). En local,
+    # il est normal de ne pas avoir Postgres sur localhost:5432.
+
     # 2) checks Postgres: aucun type USER-DEFINED, aucun enum natif dans public
     user_defined = _psql_scalar(
         psql_url=conn.psql_url,
@@ -111,7 +114,17 @@ def main() -> int:
         env={**os.environ, "DATABASE_URL": conn.database_url},
     )
 
-    print("\n[ci][SUCCESS] migrations + checks + seed OK")
+    # 4) Forecast smoke (doit écrire prediction_vente)
+    _run(
+        [sys.executable, "scripts/run_forecast.py", "--horizon", "7"],
+        env={**os.environ, "DATABASE_URL": conn.database_url},
+    )
+    pred_count = _psql_scalar(psql_url=conn.psql_url, sql="SELECT count(*) FROM prediction_vente;")
+    if pred_count <= 0:
+        raise RuntimeError(f"CI check failed: prediction_vente count must be > 0 (got {pred_count})")
+    print(f"[ci][OK] prediction_vente rows = {pred_count}")
+
+    print("\n[ci][SUCCESS] migrations + checks + seed + forecast OK")
     return 0
 
 
