@@ -81,6 +81,23 @@ def main() -> int:
     # éviter de logguer un secret si un jour on change la conf
     print("[ci] DATABASE_URL:", conn.database_url.replace(":delicego@", ":***@"))
 
+    # 0) anti "multiple-heads" Alembic
+    # IMPORTANT: Alembic renvoie une ligne par head via `alembic heads`.
+    # On veut garantir qu'il n'y a qu'un seul head pour éviter des surprises en CI/prod.
+    heads_out = subprocess.check_output(
+        ["alembic", "-c", "alembic.ini", "heads"],
+        env={**os.environ, "DATABASE_URL": conn.database_url},
+        text=True,
+    ).strip()
+    head_lines = [l for l in heads_out.splitlines() if l.strip()]
+    if len(head_lines) != 1:
+        raise RuntimeError(
+            "CI check failed: multiple Alembic heads detected. "
+            f"Expected 1, got {len(head_lines)}. Output:\n{heads_out}\n"
+            "Fix: run `alembic merge -m 'merge heads' <head1> <head2>` and commit the merge revision."
+        )
+    print(f"[ci][OK] alembic heads = 1 ({head_lines[0].split()[0]})")
+
     # 1) migrations
     _run(["alembic", "-c", "alembic.ini", "upgrade", "head"], env={**os.environ, "DATABASE_URL": conn.database_url})
 

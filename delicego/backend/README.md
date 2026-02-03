@@ -36,6 +36,25 @@ Notes:
 - La CI est en "Solution 2": aucun ENUM PostgreSQL natif attendu.
 - La migration `zzzz` n'est pas downgradable => aucun downgrade n'est exécuté en CI.
 
+### Règle Alembic : pas de multiple-heads
+
+Avant de créer une nouvelle migration, **vérifier qu'il n'y a qu'un seul head** :
+
+```bash
+cd backend
+alembic -c alembic.ini heads
+```
+
+La commande doit afficher **1 seule ligne**.
+Si plusieurs heads existent, il faut les fusionner via :
+
+```bash
+cd backend
+alembic -c alembic.ini merge -m "merge heads" <head1> <head2>
+```
+
+La CI applique aussi ce check et échouera si plusieurs heads sont présents.
+
 ## Import catalogue XLSX
 
 Le backend peut importer un fichier catalogue `.xlsx` (fournisseurs / produits / produit_fournisseur) et produire des rapports CSV de mapping ingrédients.
