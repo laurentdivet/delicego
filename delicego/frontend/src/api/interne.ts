@@ -190,11 +190,8 @@ export async function telechargerImpactActionsCsv(params?: {
   if (params?.action_status) qs.set('action_status', String(params.action_status))
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
 
-  const token = lireToken()
   const reponse = await fetch(`/api/interne/impact/export/actions.csv${suffix}`, {
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: construireHeaders(),
   })
   if (!reponse.ok) {
     const message = await lireErreur(reponse)
@@ -206,6 +203,14 @@ export async function telechargerImpactActionsCsv(params?: {
 function lireToken(): string | null {
   // Token minimal pour l'API interne (saisi via l'UI "Accès interne")
   return localStorage.getItem('INTERNAL_TOKEN')
+}
+
+function construireHeaders(options?: RequestInit): HeadersInit {
+  const token = lireToken()
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options?.headers || {}),
+  }
 }
 
 function construireUrl(path: string): string {
@@ -225,14 +230,12 @@ async function lireErreur(reponse: Response): Promise<string> {
 
 async function requeteJson<T>(path: string, options?: RequestInit): Promise<T> {
   const url = construireUrl(path)
-  const token = lireToken()
 
   const reponse = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options?.headers || {}),
+      ...construireHeaders(options),
     },
   })
 
