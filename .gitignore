@@ -18,12 +18,6 @@ storage/
 delicego/storage/
 
 # =========================
-# Frontend (commit séparé)
-# =========================
-frontend/
-delicego/frontend/
-
-# =========================
 # Projets legacy / hors scope
 # =========================
 Site/
