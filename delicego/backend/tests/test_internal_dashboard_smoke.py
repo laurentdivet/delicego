@@ -2,6 +2,8 @@ import os
 
 from fastapi.testclient import TestClient
 
+from tests._http_helpers import entetes_internes
+
 from app.main import app
 from scripts.seed_demo import seed_demo
 
@@ -27,7 +29,7 @@ def test_internal_impact_dashboard_smoke() -> None:
     # 2) avec bon token => 200 + payload
     r = client.get(
         "/api/interne/impact/dashboard?days=30",
-        headers={"Authorization": "Bearer secret-test-token"},
+        headers=entetes_internes(),
     )
     assert r.status_code == 200
     data = r.json()

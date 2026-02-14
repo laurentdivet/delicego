@@ -6,6 +6,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tests._http_helpers import entetes_internes
+
 from app.domaine.enums.types import TypeMagasin, TypeMouvementStock
 from app.domaine.modeles import Fournisseur, Ingredient, Magasin, Menu, Recette
 from app.domaine.modeles.commande_client import CommandeClient, LigneCommandeClient
@@ -21,11 +23,7 @@ def _client_interne() -> TestClient:
 
 
 def _entetes_internes() -> dict[str, str]:
-    # verifier_acces_interne accepte soit Authorization: Bearer <token>,
-    # soit le header legacy X-CLE-INTERNE (utilisé historiquement en tests).
-    # En environnement de test sans INTERNAL_API_TOKEN configuré,
-    # le backend fallback sur "dev-token".
-    return {"Authorization": "Bearer dev-token"}
+    return entetes_internes()
 
 
 @pytest.mark.asyncio

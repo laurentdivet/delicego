@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 
 import pytest
-from fastapi.testclient import TestClient
+import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domaine.enums.types import TypeMagasin, TypeMouvementStock
@@ -12,23 +12,41 @@ from app.domaine.modeles.commande_client import CommandeClient, LigneCommandeCli
 from app.domaine.modeles.production import LotProduction, PlanProduction
 from app.domaine.modeles.referentiel import LigneRecette, Recette
 from app.domaine.modeles.stock_tracabilite import Lot, MouvementStock
+from app.api.dependances import fournir_session
 from app.main import creer_application
+from tests._http_helpers import entetes_internes
 
 
-def _client_interne() -> TestClient:
-    return TestClient(creer_application())
+def _app_avec_dependances_test(session_test: AsyncSession):
+    app = creer_application()
+
+    from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
+
+    async def _fournir_session_override():
+        assert session_test.bind is not None
+        async with _AsyncSession(bind=session_test.bind, expire_on_commit=False) as s:
+            yield s
+
+    app.dependency_overrides[fournir_session] = _fournir_session_override
+    return app
+
+
+async def _client_api(session_test: AsyncSession) -> httpx.AsyncClient:
+    app = _app_avec_dependances_test(session_test)
+    transport = httpx.ASGITransport(app=app)
+    return httpx.AsyncClient(transport=transport, base_url="http://test")
 
 
 def _entetes_internes() -> dict[str, str]:
-    return {"X-CLE-INTERNE": "cle-technique"}
+    return entetes_internes()
 
 
 @pytest.mark.asyncio
 async def test_dashboard_vide_retours_coherents(session_test: AsyncSession) -> None:
-    client = _client_interne()
+    client = await _client_api(session_test)
 
     # Vue globale
-    r = client.get(
+    r = await client.get(
         "/api/interne/dashboard/vue-globale",
         headers=_entetes_internes(),
         params={"date_cible": "2025-01-01"},
@@ -41,17 +59,17 @@ async def test_dashboard_vide_retours_coherents(session_test: AsyncSession) -> N
     assert data["alertes"]["stocks_bas"] == 0
 
     # Plans
-    r = client.get("/api/interne/dashboard/plans-production", headers=_entetes_internes())
+    r = await client.get("/api/interne/dashboard/plans-production", headers=_entetes_internes())
     assert r.status_code == 200
     assert r.json() == []
 
     # Commandes
-    r = client.get("/api/interne/dashboard/commandes-clients", headers=_entetes_internes())
+    r = await client.get("/api/interne/dashboard/commandes-clients", headers=_entetes_internes())
     assert r.status_code == 200
     assert r.json() == []
 
     # Alertes
-    r = client.get(
+    r = await client.get(
         "/api/interne/dashboard/alertes",
         headers=_entetes_internes(),
         params={"date_cible": "2025-01-01"},
@@ -60,10 +78,12 @@ async def test_dashboard_vide_retours_coherents(session_test: AsyncSession) -> N
     assert r.json()["stocks_bas"] == []
     assert r.json()["lots_proches_dlc"] == []
 
+    await client.aclose()
+
 
 @pytest.mark.asyncio
 async def test_dashboard_avec_donnees_agrege_correctement(session_test: AsyncSession) -> None:
-    client = _client_interne()
+    client = await _client_api(session_test)
 
     # --- Données : magasin + ingrédients + stock ---
     magasin = Magasin(nom="Magasin Dash", type_magasin=TypeMagasin.PRODUCTION, actif=True)
@@ -186,7 +206,7 @@ async def test_dashboard_avec_donnees_agrege_correctement(session_test: AsyncSes
 
     # --- Appels dashboard ---
 
-    r = client.get(
+    r = await client.get(
         "/api/interne/dashboard/vue-globale",
         headers=_entetes_internes(),
         params={"date_cible": "2025-01-01"},
@@ -198,12 +218,12 @@ async def test_dashboard_avec_donnees_agrege_correctement(session_test: AsyncSes
     assert vue["quantite_produite"] == 1.0
 
     # Plans
-    r = client.get("/api/interne/dashboard/plans-production", headers=_entetes_internes())
+    r = await client.get("/api/interne/dashboard/plans-production", headers=_entetes_internes())
     assert r.status_code == 200
     assert len(r.json()) == 1
 
     # Commandes
-    r = client.get(
+    r = await client.get(
         "/api/interne/dashboard/commandes-clients",
         headers=_entetes_internes(),
         params={"date_cible": "2025-01-01"},
@@ -214,7 +234,7 @@ async def test_dashboard_avec_donnees_agrege_correctement(session_test: AsyncSes
     assert r.json()[0]["quantite_totale"] == 2.0
 
     # Consommation
-    r = client.get(
+    r = await client.get(
         "/api/interne/dashboard/consommation",
         headers=_entetes_internes(),
         params={"date_debut": "2025-01-01", "date_fin": "2025-01-01"},
@@ -225,7 +245,7 @@ async def test_dashboard_avec_donnees_agrege_correctement(session_test: AsyncSes
     assert len(conso) == 2
 
     # Alertes
-    r = client.get(
+    r = await client.get(
         "/api/interne/dashboard/alertes",
         headers=_entetes_internes(),
         params={"date_cible": "2025-01-01"},
@@ -237,3 +257,5 @@ async def test_dashboard_avec_donnees_agrege_correctement(session_test: AsyncSes
     assert any(a["ingredient"] == "Tomate Dash" for a in alertes["stocks_bas"])
     # Salade DLC proche (2025-01-02 avec date_cible=2025-01-01, délai 2)
     assert any(a["ingredient"] == "Salade Dash" for a in alertes["lots_proches_dlc"])
+
+    await client.aclose()

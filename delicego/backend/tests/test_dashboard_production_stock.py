@@ -13,6 +13,7 @@ from app.domaine.modeles.production import LotProduction
 from app.domaine.modeles.referentiel import Menu, Recette
 from app.domaine.modeles.stock_tracabilite import Lot, MouvementStock
 from app.main import creer_application
+from tests._http_helpers import entetes_internes
 
 
 def _app_avec_dependances_test(session_test: AsyncSession):
@@ -36,7 +37,7 @@ async def _client_api(session_test: AsyncSession) -> httpx.AsyncClient:
 
 
 def _entetes_internes() -> dict[str, str]:
-    return {"X-CLE-INTERNE": "cle-technique"}
+    return entetes_internes()
 
 
 @pytest.mark.asyncio

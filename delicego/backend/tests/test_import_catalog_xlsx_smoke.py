@@ -23,8 +23,9 @@ async def test_import_catalog_xlsx_is_idempotent_and_writes_reports(tmp_path: Pa
     - assertions: compteurs augmentent, reports créés, pas de doublons au second import
     """
 
-    # IMPORTANT: le script import_catalog_xlsx refuse une DB implicite.
-    os.environ["DATABASE_URL"] = parametres_application.url_base_donnees
+    # IMPORTANT: forcer la DB de tests (fixture) : sinon seed_all/import vont
+    # se connecter à une autre base et ne verront pas le schéma initialisé.
+    os.environ["DATABASE_URL"] = session_test.bind.url.render_as_string(hide_password=False)
 
     # Seed baseline
     await seed_all.seed_all(apply=True, catalog_xlsx=None, subset=None)

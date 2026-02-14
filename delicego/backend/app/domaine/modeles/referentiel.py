@@ -15,6 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.domaine.modeles.base import ModeleHorodate
 from app.domaine.enums.types import TypeMagasin
+from app.domaine.modeles.catalogue import Produit
 
 
 class Magasin(ModeleHorodate):
@@ -94,6 +95,13 @@ class Ingredient(ModeleHorodate):
     )
 
     actif: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    # ===== Catalogue (mapping achat -> consommation) =====
+    # Permet de relier un ingrédient (recettes/stock) à un produit (catalogue fournisseur)
+    # pour les backfills `produit_id` côté stock.
+    # NOTE: le lien Ingredient -> Produit est géré par migration (cf. alembic)
+    # et n'est pas nécessairement présent en environnement de tests (create_all).
+    # On ne le mappe donc pas ici pour ne pas casser l'initialisation du schéma en tests.
 
 
 class IngredientAlias(ModeleHorodate):

@@ -2,85 +2,93 @@ import os
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from fastapi.testclient import TestClient
+import pytest
+import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from tests._http_helpers import entetes_internes
 
 from app.domaine.modeles.impact import ImpactRecommendationEvent
 from app.domaine.modeles.referentiel import Magasin
 from app.domaine.enums.types import TypeMagasin
-from app.main import app
+from app.api.dependances import fournir_session
+from app.main import creer_application
 
 
-def test_internal_impact_dashboard_magasin_filter_smoke() -> None:
+def _app_avec_dependances_test(session_test: AsyncSession):
+    app = creer_application()
+
+    from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
+
+    async def _fournir_session_override():
+        assert session_test.bind is not None
+        async with _AsyncSession(bind=session_test.bind, expire_on_commit=False) as s:
+            yield s
+
+    app.dependency_overrides[fournir_session] = _fournir_session_override
+    return app
+
+
+async def _client_api(session_test: AsyncSession) -> httpx.AsyncClient:
+    app = _app_avec_dependances_test(session_test)
+    transport = httpx.ASGITransport(app=app)
+    return httpx.AsyncClient(transport=transport, base_url="http://test")
+
+
+@pytest.mark.asyncio
+async def test_internal_impact_dashboard_magasin_filter_smoke(session_test: AsyncSession) -> None:
     """Le dashboard doit filtrer les reco/events par magasin_id quand fourni."""
 
     # Arrange
     os.environ.pop("ENV", None)
     os.environ["INTERNAL_API_TOKEN"] = "secret-test-token"
 
-    client = TestClient(app)
+    client = await _client_api(session_test)
 
     # Seed minimal: 2 magasins + 2 reco events
-    from app.core.configuration import parametres_application
-    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+    m1 = Magasin(id=uuid4(), nom=f"Magasin A {uuid4().hex[:6]}", type_magasin=TypeMagasin.VENTE, actif=True)
+    m2 = Magasin(id=uuid4(), nom=f"Magasin B {uuid4().hex[:6]}", type_magasin=TypeMagasin.VENTE, actif=True)
+    session_test.add_all([m1, m2])
+    await session_test.flush()
 
-    url_db = os.getenv("DATABASE_URL")
-    if not url_db:
-        raise RuntimeError(
-            "DATABASE_URL is required to run DB tests. "
-            "Example: DATABASE_URL='postgresql+asyncpg://user:pass@localhost:5432/dbname' pytest"
-        )
+    now = datetime.now(timezone.utc)
+    r1 = ImpactRecommendationEvent(
+        id=uuid4(),
+        code="TEST_RECO_A",
+        metric="waste",
+        entities_signature=uuid4().hex,
+        severity="LOW",
+        status="OPEN",
+        entities={"magasin_id": str(m1.id)},
+        first_seen_at=now,
+        last_seen_at=now,
+        occurrences=1,
+        resolved_at=None,
+        comment=None,
+    )
+    r2 = ImpactRecommendationEvent(
+        id=uuid4(),
+        code="TEST_RECO_B",
+        metric="waste",
+        entities_signature=uuid4().hex,
+        severity="LOW",
+        status="OPEN",
+        entities={"magasin_id": str(m2.id)},
+        first_seen_at=now,
+        last_seen_at=now,
+        occurrences=1,
+        resolved_at=None,
+        comment=None,
+    )
+    session_test.add_all([r1, r2])
+    await session_test.commit()
 
-    engine = create_async_engine(url_db, pool_pre_ping=True)
-    session_maker = async_sessionmaker(engine, expire_on_commit=False)
-
-    import asyncio
-
-    async def _seed() -> tuple[str, str]:
-        async with session_maker() as session:
-            m1 = Magasin(id=uuid4(), nom=f"Magasin A {uuid4().hex[:6]}", type_magasin=TypeMagasin.VENTE, actif=True)
-            m2 = Magasin(id=uuid4(), nom=f"Magasin B {uuid4().hex[:6]}", type_magasin=TypeMagasin.VENTE, actif=True)
-            session.add_all([m1, m2])
-            await session.flush()
-
-            now = datetime.now(timezone.utc)
-            r1 = ImpactRecommendationEvent(
-                id=uuid4(),
-                code="TEST_RECO_A",
-                metric="waste",
-                entities_signature=uuid4().hex,
-                severity="LOW",
-                status="OPEN",
-                entities={"magasin_id": str(m1.id)},
-                first_seen_at=now,
-                last_seen_at=now,
-                occurrences=1,
-                resolved_at=None,
-                comment=None,
-            )
-            r2 = ImpactRecommendationEvent(
-                id=uuid4(),
-                code="TEST_RECO_B",
-                metric="waste",
-                entities_signature=uuid4().hex,
-                severity="LOW",
-                status="OPEN",
-                entities={"magasin_id": str(m2.id)},
-                first_seen_at=now,
-                last_seen_at=now,
-                occurrences=1,
-                resolved_at=None,
-                comment=None,
-            )
-            session.add_all([r1, r2])
-            await session.commit()
-            return str(m1.id), str(m2.id)
-
-    magasin_a_id, magasin_b_id = asyncio.run(_seed())
+    magasin_a_id, magasin_b_id = str(m1.id), str(m2.id)
 
     # Act 1: filtre magasin A
-    r = client.get(
+    r = await client.get(
         f"/api/interne/impact/dashboard?days=30&magasin_id={magasin_a_id}",
-        headers={"Authorization": "Bearer secret-test-token"},
+        headers=entetes_internes(),
     )
     assert r.status_code == 200
     data = r.json()
@@ -89,9 +97,9 @@ def test_internal_impact_dashboard_magasin_filter_smoke() -> None:
     assert "TEST_RECO_B" not in codes
 
     # Act 2: sans filtre => les deux
-    r2 = client.get(
+    r2 = await client.get(
         "/api/interne/impact/dashboard?days=30",
-        headers={"Authorization": "Bearer secret-test-token"},
+        headers=entetes_internes(),
     )
     assert r2.status_code == 200
     data2 = r2.json()
@@ -99,5 +107,4 @@ def test_internal_impact_dashboard_magasin_filter_smoke() -> None:
     assert "TEST_RECO_A" in codes2
     assert "TEST_RECO_B" in codes2
 
-    # cleanup engine
-    asyncio.run(engine.dispose())
+    await client.aclose()

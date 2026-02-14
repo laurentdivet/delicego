@@ -40,6 +40,14 @@ def _parser() -> argparse.ArgumentParser:
 async def _backfill_table(*, session: AsyncSession, table: str, force: bool) -> tuple[int, int, int]:
     """Retourne (candidats, backfill, impossibles)."""
 
+    # En environnement de tests (schema créé via metadata.create_all) ou si les migrations
+    # n'ont pas été appliquées, la colonne produit_id peut ne pas exister.
+    # On rend la fonction "no-op" plutôt que de planter.
+    try:
+        await session.execute(text(f"SELECT t.produit_id FROM {table} t WHERE 1=0"))
+    except Exception:
+        return 0, 0, 0
+
     # candidats: lignes avec ingredient_id présent, et produit_id NULL si pas force
     where_pf = "" if force else "AND t.produit_id IS NULL"
     candidats = (

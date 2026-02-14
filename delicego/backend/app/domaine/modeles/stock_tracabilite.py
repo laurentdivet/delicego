@@ -44,6 +44,7 @@ class Lot(ModeleHorodate):
         nullable=False,
     )
 
+
     fournisseur_id: Mapped[UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("fournisseur.id"),
@@ -119,6 +120,7 @@ class MouvementStock(ModeleHorodate):
         ForeignKey("ingredient.id"),
         nullable=False,
     )
+
 
     lot_id: Mapped[UUID | None] = mapped_column(
         UUID(as_uuid=True),

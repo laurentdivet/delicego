@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import creer_application
+from tests._http_helpers import entetes_internes
 
 
 def _client_interne() -> TestClient:
@@ -11,7 +12,7 @@ def _client_interne() -> TestClient:
 
 
 def _entetes_internes() -> dict[str, str]:
-    return {"X-CLE-INTERNE": "cle-technique"}
+    return entetes_internes()
 
 
 @pytest.mark.asyncio

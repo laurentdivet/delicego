@@ -2,6 +2,8 @@ import os
 
 from fastapi.testclient import TestClient
 
+from tests._http_helpers import entetes_internes
+
 from app.main import app
 from scripts.seed_demo import seed_demo
 
@@ -25,7 +27,7 @@ def test_impact_actions_create_and_patch_smoke() -> None:
     # get one recommendation id from dashboard
     dash = client.get(
         "/api/interne/impact/dashboard?days=365&limit=1",
-        headers={"Authorization": "Bearer secret-test-token"},
+        headers=entetes_internes(),
     )
     assert dash.status_code == 200
     recos = dash.json().get("recommendations") or []
@@ -35,7 +37,7 @@ def test_impact_actions_create_and_patch_smoke() -> None:
     # Act: create action with extra fields
     r = client.post(
         f"/api/interne/impact/recommendations/{reco_id}/actions",
-        headers={"Authorization": "Bearer secret-test-token"},
+        headers=entetes_internes(),
         json={
             "action_type": "MANUAL",
             "description": "Action test",
@@ -57,7 +59,7 @@ def test_impact_actions_create_and_patch_smoke() -> None:
     # Act: patch should modify updated_at
     r2 = client.patch(
         f"/api/interne/impact/actions/{action_id}",
-        headers={"Authorization": "Bearer secret-test-token"},
+        headers=entetes_internes(),
         json={"description": "Action test modifiée", "priority": 2},
     )
     assert r2.status_code == 200

@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+from tests._http_helpers import entetes_internes
+
 from app.main import creer_application
 
 
@@ -11,8 +13,7 @@ def _client_interne() -> TestClient:
 
 
 def _entetes_internes() -> dict[str, str]:
-    # API interne (router-level verifier_acces_interne)
-    return {"Authorization": "Bearer dev-token"}
+    return entetes_internes()
 
 
 @pytest.mark.asyncio

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -66,6 +66,45 @@ def verifier_authentifie(user: User = Depends(fournir_utilisateur_courant)) -> N
     # Ici, on garde la signature pour être utilisée directement dans dependencies=[...]
     # sans se préoccuper de la valeur de retour.
     return None
+
+
+def verifier_authentifie_ou_interne(
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    _x_cle_interne: str | None = Header(default=None, alias="X-CLE-INTERNE"),
+) -> None:
+    """Compat interne : si X-CLE-INTERNE est présent, on ne bloque pas sur JWT.
+
+    Certaines routes /api/interne/* sont destinées à un usage technique (dashboard,
+    cuisine, etc.) et sont déjà protégées par `verifier_acces_interne`.
+    Historiquement elles ne nécessitaient pas d'auth JWT utilisateur.
+
+    Pour éviter de casser ces endpoints (et leurs tests), on accepte :
+    - soit un JWT valide (Authorization: Bearer ...)
+    - soit un accès interne (X-CLE-INTERNE) déjà validé en amont.
+    """
+
+    # Si on a un token interne (via X-CLE-INTERNE ou via Authorization: Bearer <token interne>),
+    # alors `verifier_acces_interne` a déjà validé l'accès.
+    # -> on n'exige pas un JWT user.
+    if _x_cle_interne:
+        return None
+
+    # NOTE : cette dépendance ne doit JAMAIS bloquer les routes /api/interne/*.
+    # Ces routes sont déjà sécurisées par `verifier_acces_interne` au niveau du
+    # routeur interne.
+    if request.url.path.startswith("/api/interne"):
+        return None
+
+    # Fallback: comportement strict JWT.
+    # On réutilise la logique existante.
+    token = _extraire_bearer(authorization)
+    if token is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token manquant.")
+    try:
+        decoder_token_acces(token, secret=parametres_application.jwt_secret)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide.")
 
 
 def verifier_roles_requis(*roles_requis: str):

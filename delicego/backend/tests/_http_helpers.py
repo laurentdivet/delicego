@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 
 
+
 def entetes_internes(extra: dict[str, str] | None = None) -> dict[str, str]:
     """Headers pour /api/interne/*.
 
@@ -18,7 +19,20 @@ def entetes_internes(extra: dict[str, str] | None = None) -> dict[str, str]:
     `extra` permet d'ajouter d'autres headers (ex: Authorization pour un JWT applicatif).
     """
 
-    h: dict[str, str] = {"X-CLE-INTERNE": os.getenv("INTERNAL_API_TOKEN", "dev-token")}
+    # IMPORTANT :
+    # Certaines routes internes exigent *aussi* un JWT applicatif via Authorization.
+    # Le token interne doit donc rester sur X-CLE-INTERNE, et on force également
+    # une valeur d'Authorization non vide pour satisfaire les endpoints qui ne
+    # disposent pas (encore) d'une alternative en tests.
+    #
+    # Par convention on utilise "Bearer <INTERNAL_API_TOKEN>".
+    token_interne = os.getenv("INTERNAL_API_TOKEN", "dev-token")
+
+    h: dict[str, str] = {
+        "X-CLE-INTERNE": token_interne,
+        # Compat: certaines routes internes attendent encore Authorization: Bearer <token interne>
+        "Authorization": f"Bearer {token_interne}",
+    }
     if extra:
         h.update(extra)
     return h

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
+import os
 import httpx
 import pytest
 from sqlalchemy import select
+from tests._http_helpers import entetes_internes as _entetes_internes_global
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domaine.enums.types import TypeMagasin, TypeMouvementStock
@@ -38,7 +41,10 @@ async def _client_api(session_test: AsyncSession) -> httpx.AsyncClient:
 
 
 def _entetes_internes() -> dict[str, str]:
-    return {"X-CLE-INTERNE": "cle-technique"}
+    # Ce module n'override pas ENV/INTERNAL_API_TOKEN.
+    # On force donc le token attendu à la valeur dev-token (comportement dev du backend).
+    os.environ["INTERNAL_API_TOKEN"] = os.getenv("INTERNAL_API_TOKEN", "dev-token")
+    return _entetes_internes_global()
 
 
 async def _setup_plan_production_minimal(

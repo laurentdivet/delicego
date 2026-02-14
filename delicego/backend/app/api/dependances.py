@@ -79,6 +79,15 @@ def verifier_acces_interne(
     if x_cle_interne and x_cle_interne.strip():
         token = x_cle_interne.strip()
 
+    # NOTE : si le header legacy est présent, on ne doit PAS continuer à inspecter
+    # Authorization car celui-ci peut contenir un JWT applicatif (auth user) et non
+    # le token interne.
+    # Dans ce cas, on s'arrête ici.
+    if token:
+        if not hmac.compare_digest(token, expected):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token interne invalide.")
+        return None
+
     # 2) Authorization: Bearer <token> (fallback)
     if not token:
         authorization = request.headers.get("Authorization")

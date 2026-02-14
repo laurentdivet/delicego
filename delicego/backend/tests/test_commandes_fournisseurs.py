@@ -19,6 +19,7 @@ from app.domaine.services.commander_fournisseur import (
 )
 from app.domaine.services.generer_besoins_fournisseurs import ServiceGenerationBesoinsFournisseurs
 from app.main import creer_application
+from tests._http_helpers import entetes_internes
 
 
 def _app_avec_dependances_test(session_test: AsyncSession):
@@ -44,7 +45,7 @@ async def _client_api(session_test: AsyncSession) -> httpx.AsyncClient:
 
 
 def _entetes_internes() -> dict[str, str]:
-    return {"X-CLE-INTERNE": "cle-technique"}
+    return entetes_internes()
 
 
 @pytest.mark.asyncio

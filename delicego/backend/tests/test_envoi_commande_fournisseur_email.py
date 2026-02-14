@@ -18,6 +18,7 @@ from app.domaine.services.envoyer_commande_fournisseur import (
     TransitionStatutInterditeEnvoiCommandeFournisseur,
 )
 from app.main import creer_application
+from tests._http_helpers import entetes_internes
 
 
 def _app_avec_dependances_test(session_test: AsyncSession, *, email_client: FakeEmailClient):
@@ -42,7 +43,7 @@ async def _client_api(session_test: AsyncSession, *, email_client: FakeEmailClie
 
 
 def _entetes_internes() -> dict[str, str]:
-    return {"X-CLE-INTERNE": "cle-technique"}
+    return entetes_internes()
 
 
 @pytest.mark.asyncio

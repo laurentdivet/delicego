@@ -2,6 +2,8 @@ import os
 
 from fastapi.testclient import TestClient
 
+from tests._http_helpers import entetes_internes
+
 from app.main import app
 from scripts.seed_demo import seed_demo
 
@@ -23,7 +25,7 @@ def test_impact_actions_export_csv_smoke() -> None:
     # get one recommendation id
     dash = client.get(
         "/api/interne/impact/dashboard?days=365&limit=1",
-        headers={"Authorization": "Bearer secret-test-token"},
+        headers=entetes_internes(),
     )
     assert dash.status_code == 200
     reco_id = (dash.json().get("recommendations") or [])[0]["id"]
@@ -31,7 +33,7 @@ def test_impact_actions_export_csv_smoke() -> None:
     # create one action
     r = client.post(
         f"/api/interne/impact/recommendations/{reco_id}/actions",
-        headers={"Authorization": "Bearer secret-test-token"},
+        headers=entetes_internes(),
         json={
             "action_type": "MANUAL",
             "description": "Action export",
@@ -44,7 +46,7 @@ def test_impact_actions_export_csv_smoke() -> None:
 
     exp = client.get(
         "/api/interne/impact/export/actions.csv?days=365",
-        headers={"Authorization": "Bearer secret-test-token"},
+        headers=entetes_internes(),
     )
     assert exp.status_code == 200
     assert exp.headers.get("content-type", "").startswith("text/csv")

@@ -4,6 +4,8 @@ import httpx
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tests._http_helpers import entetes_internes
+
 from app.domaine.modeles import Fournisseur, Ingredient
 from app.domaine.modeles.catalogue import Produit
 from app.main import creer_application
@@ -31,9 +33,7 @@ async def _client_api(session_test: AsyncSession) -> httpx.AsyncClient:
 
 
 def _entetes_internes() -> dict[str, str]:
-    # Sans INTERNAL_API_TOKEN configuré en tests, le backend fallback sur "dev-token"
-    # (cf. app.api.dependances.verifier_acces_interne)
-    return {"X-CLE-INTERNE": "dev-token"}
+    return entetes_internes()
 
 
 @pytest.mark.asyncio

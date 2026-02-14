@@ -2,6 +2,8 @@ import os
 
 from fastapi.testclient import TestClient
 
+from tests._http_helpers import entetes_internes
+
 from app.main import app
 from scripts.seed_demo import seed_demo
 
@@ -25,15 +27,9 @@ def test_internal_bearer_token_smoke() -> None:
     assert r.status_code == 401
 
     # 2) mauvais token
-    r = client.get(
-        "/api/interne/impact/summary",
-        headers={"Authorization": "Bearer wrong"},
-    )
+    r = client.get("/api/interne/impact/summary", headers=entetes_internes({"X-CLE-INTERNE": "wrong"}))
     assert r.status_code == 401
 
     # 3) bon token
-    r = client.get(
-        "/api/interne/impact/summary",
-        headers={"Authorization": "Bearer secret-test-token"},
-    )
+    r = client.get("/api/interne/impact/summary", headers=entetes_internes())
     assert r.status_code == 200

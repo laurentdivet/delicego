@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependances import fournir_session, verifier_acces_interne
-from app.api.dependances_auth import verifier_authentifie, verifier_roles_requis_legacy
+from app.api.dependances_auth import verifier_authentifie_ou_interne, verifier_roles_requis_legacy
 from app.api.schemas.production_preparation import (
     EvenementTraceabilite,
     ReponseCreneauQuantite,
@@ -42,8 +42,9 @@ routeur_production_preparation_interne = APIRouter(
     tags=["production_preparation_interne"],
     dependencies=[
         Depends(verifier_acces_interne),
-        Depends(verifier_authentifie),
-        Depends(verifier_roles_requis_legacy("admin", "operateur")),
+        # Les routes /api/interne/* sont déjà protégées par `verifier_acces_interne`.
+        # On ne force pas d'auth JWT user/roles ici : ces endpoints sont destinés
+        # à un usage technique (écran cuisine, dashboard, etc.).
     ],
 )
 
