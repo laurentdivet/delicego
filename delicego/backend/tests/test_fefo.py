@@ -18,7 +18,7 @@ from app.domaine.services.allocateur_fefo import (
 @pytest.mark.asyncio
 async def test_allocation_fefo_ordre_et_repartition(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat", type_magasin=TypeMagasin.PRODUCTION, actif=True)
-    ingredient = Ingredient(nom="Salade", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Salade", unite_stock="kg", unite_consommation="kg", actif=True)
     fournisseur = Fournisseur(nom="Fresh", actif=True)
 
     session_test.add_all([magasin, ingredient, fournisseur])
@@ -84,7 +84,7 @@ async def test_allocation_fefo_ordre_et_repartition(session_test: AsyncSession) 
 @pytest.mark.asyncio
 async def test_allocation_fefo_stock_insuffisant(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Magasin X", type_magasin=TypeMagasin.VENTE, actif=True)
-    ingredient = Ingredient(nom="Oignon", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Oignon", unite_stock="kg", unite_consommation="kg", actif=True)
 
     session_test.add_all([magasin, ingredient])
     await session_test.commit()

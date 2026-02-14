@@ -50,7 +50,7 @@ def _entetes_internes() -> dict[str, str]:
 @pytest.mark.asyncio
 async def test_creation_commande_fournisseur_brouillon_sans_stock(session_test: AsyncSession) -> None:
     fournisseur = Fournisseur(nom="Fournisseur A", actif=True)
-    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_mesure="kg", cout_unitaire=2.5, actif=True)
+    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_consommation="kg", cout_unitaire=2.5, actif=True)
     session_test.add_all([fournisseur, ingredient])
     await session_test.commit()
 
@@ -78,7 +78,7 @@ async def test_creation_commande_fournisseur_brouillon_sans_stock(session_test: 
 async def test_reception_partielle_statut_partielle_et_stock_sur_recu(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat", type_magasin=TypeMagasin.PRODUCTION, actif=True)
     fournisseur = Fournisseur(nom="Fournisseur B", actif=True)
-    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_mesure="kg", cout_unitaire=3.0, actif=True)
+    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_consommation="kg", cout_unitaire=3.0, actif=True)
     session_test.add_all([magasin, fournisseur, ingredient])
     await session_test.commit()
 
@@ -133,7 +133,7 @@ async def test_reception_partielle_statut_partielle_et_stock_sur_recu(session_te
 async def test_reception_complete_apres_partielle_cumul_et_statut_receptionnee(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat", type_magasin=TypeMagasin.PRODUCTION, actif=True)
     fournisseur = Fournisseur(nom="Fournisseur B2", actif=True)
-    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_mesure="kg", cout_unitaire=3.0, actif=True)
+    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_consommation="kg", cout_unitaire=3.0, actif=True)
     session_test.add_all([magasin, fournisseur, ingredient])
     await session_test.commit()
 
@@ -185,7 +185,7 @@ async def test_reception_complete_apres_partielle_cumul_et_statut_receptionnee(s
 async def test_rollback_si_erreur_pendant_reception(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat2", type_magasin=TypeMagasin.PRODUCTION, actif=True)
     fournisseur = Fournisseur(nom="Fournisseur C", actif=True)
-    ingredient = Ingredient(nom="Beurre", unite_stock="kg", unite_mesure="kg", cout_unitaire=5.0, actif=True)
+    ingredient = Ingredient(nom="Beurre", unite_stock="kg", unite_consommation="kg", cout_unitaire=5.0, actif=True)
     session_test.add_all([magasin, fournisseur, ingredient])
     await session_test.commit()
 
@@ -226,7 +226,7 @@ async def test_generation_besoins_cree_commande_brouillon_sans_stock(session_tes
     # prérequis : magasin + fournisseur + ingredient
     magasin = Magasin(nom="Mag Besoins", type_magasin=TypeMagasin.VENTE, actif=True)
     fournisseur = Fournisseur(nom="AAA Fournisseur", actif=True)
-    ingredient = Ingredient(nom="Sel", unite_stock="kg", unite_mesure="kg", cout_unitaire=1.0, actif=True)
+    ingredient = Ingredient(nom="Sel", unite_stock="kg", unite_consommation="kg", cout_unitaire=1.0, actif=True)
     session_test.add_all([magasin, fournisseur, ingredient])
     await session_test.commit()
 

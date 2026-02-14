@@ -14,10 +14,47 @@ from app.domaine.modeles.production import LotProduction, PlanProduction
 from app.domaine.modeles.referentiel import LigneRecette, Recette
 from app.domaine.modeles.stock_tracabilite import Lot, MouvementStock
 from app.main import creer_application
+from app.core.securite import creer_token_acces
+
+
+def _entetes_internes_admin(jwt: str) -> dict[str, str]:
+    # NOTE: le routeur /api/interne/production exige *à la fois*:
+    # - verifier_acces_interne (X-CLE-INTERNE ou Authorization Bearer token interne)
+    # - verifier_authentifie (Authorization Bearer jwt)
+    # => on ne peut pas utiliser Authorization pour les 2.
+    return {
+        "X-CLE-INTERNE": "dev-token",
+        "Authorization": f"Bearer {jwt}",
+    }
+
+
+def _injecter_jwt_dans_cookie(client: httpx.AsyncClient, jwt: str) -> None:
+    """Les dépendances d'auth app lisent parfois le token depuis un cookie."""
+
+    client.cookies.set("token_acces", jwt)
+
+
+async def _rollback_si_transaction(session: AsyncSession) -> None:
+    """Les endpoints utilisent leur propre session DB.
+
+    Dans certains cas, la fixture `session_test` laisse une transaction ouverte,
+    ce qui peut provoquer des erreurs côté services (session.begin() imbriqué).
+    """
+
+    # propriété sync sur AsyncSession, lecture safe
+    if session.sync_session.in_transaction():
+        await session.rollback()
 
 
 def _app_avec_dependances_test(session_test: AsyncSession):
     app = creer_application()
+
+    # IMPORTANT: /api/interne/* vérifie d'abord verifier_acces_interne.
+    # Cette dépendance lit la variable d'env INTERNAL_API_TOKEN au moment de l'appel,
+    # donc on la force AVANT de commencer à appeler l'API.
+    import os
+
+    os.environ["INTERNAL_API_TOKEN"] = "dev-token"
 
     from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
 
@@ -27,6 +64,13 @@ def _app_avec_dependances_test(session_test: AsyncSession):
     async def _fournir_session_override():
         assert session_test.bind is not None
         async with _AsyncSession(bind=session_test.bind, expire_on_commit=False) as s:
+            # IMPORTANT:
+            # Les services démarrent souvent avec `async with session.begin():`.
+            # Avec SQLAlchemy 2, une session peut déjà être en "autobegin" après
+            # un premier accès DB. On force donc un rollback ici pour garantir
+            # que la transaction démarre au bon endroit.
+            if s.sync_session.in_transaction():
+                await s.rollback()
             yield s
 
     app.dependency_overrides[fournir_session] = _fournir_session_override
@@ -41,13 +85,11 @@ async def _client_api(session_test: AsyncSession) -> httpx.AsyncClient:
 
 
 def _entetes_internes() -> dict[str, str]:
-    return {"X-CLE-INTERNE": "cle-technique"}
+    # /api/interne/*: accès interne
+    return {"X-CLE-INTERNE": "dev-token"}
 
 
-@pytest.mark.asyncio
-async def test_api_planification_cree_un_plan(session_test: AsyncSession) -> None:
-    client = await _client_api(session_test)
-
+async def _seed_donnees_planification(session_test: AsyncSession) -> tuple[UUID, date, date]:
     magasin = Magasin(nom="Magasin API", type_magasin=TypeMagasin.VENTE, actif=True)
     session_test.add(magasin)
     await session_test.flush()
@@ -60,11 +102,9 @@ async def test_api_planification_cree_un_plan(session_test: AsyncSession) -> Non
     session_test.add(menu)
     await session_test.commit()
 
-    # Ventes sur 2 jours : total 10 => moyenne 5
     debut = date(2025, 6, 1)
     fin = date(2025, 6, 2)
 
-    # On insère les ventes explicitement (datetime UTC)
     from datetime import datetime, timezone
 
     from app.domaine.enums.types import CanalVente
@@ -76,25 +116,63 @@ async def test_api_planification_cree_un_plan(session_test: AsyncSession) -> Non
                 magasin_id=magasin.id,
                 menu_id=menu.id,
                 date_vente=datetime(2025, 6, 1, 12, 0, 0, tzinfo=timezone.utc),
-                canal=CanalVente.COMPTOIR,
+                canal=CanalVente.INTERNE,
                 quantite=5.0,
             ),
             Vente(
                 magasin_id=magasin.id,
                 menu_id=menu.id,
                 date_vente=datetime(2025, 6, 2, 12, 0, 0, tzinfo=timezone.utc),
-                canal=CanalVente.COMPTOIR,
+                canal=CanalVente.INTERNE,
                 quantite=5.0,
             ),
         ]
     )
     await session_test.commit()
 
+    return magasin.id, debut, fin
+
+
+async def _creer_user_admin_et_jwt(session_test: AsyncSession) -> str:
+    """Crée un user + rôle admin en base et retourne un JWT valide."""
+
+    from app.core.configuration import parametres_application
+    from tests._auth_helpers import FAKE_BCRYPT_HASH
+    from app.domaine.modeles.auth import Role, User, UserRole
+
+    role_admin = Role(code="admin", libelle="Admin")
+    user = User(
+        email="admin-test@delicego.local",
+        nom_affiche="Admin Test",
+        mot_de_passe_hash=FAKE_BCRYPT_HASH,
+        actif=True,
+    )
+    session_test.add_all([role_admin, user])
+    await session_test.flush()
+    session_test.add(UserRole(user_id=user.id, role_id=role_admin.id))
+    await session_test.commit()
+
+    return creer_token_acces(
+        secret=parametres_application.jwt_secret,
+        sujet=str(user.id),
+        duree_minutes=parametres_application.jwt_duree_minutes,
+        roles=["admin"],
+    )
+
+
+@pytest.mark.asyncio
+async def test_api_planification_cree_un_plan(session_test: AsyncSession) -> None:
+    client = await _client_api(session_test)
+
+    jwt = await _creer_user_admin_et_jwt(session_test)
+    await _rollback_si_transaction(session_test)
+    magasin_id, debut, fin = await _seed_donnees_planification(session_test)
+
     reponse = await client.post(
         "/api/interne/production/planifier",
-        headers=_entetes_internes(),
+        headers=_entetes_internes_admin(jwt),
         json={
-            "magasin_id": str(magasin.id),
+            "magasin_id": str(magasin_id),
             "date_plan": "2025-06-03",
             "date_debut_historique": str(debut),
             "date_fin_historique": str(fin),
@@ -118,9 +196,14 @@ async def test_api_planification_cree_un_plan(session_test: AsyncSession) -> Non
 async def test_api_execution_production_retourne_compteurs(session_test: AsyncSession) -> None:
     client = await _client_api(session_test)
 
+    jwt = await _creer_user_admin_et_jwt(session_test)
+
+    # éviter de réutiliser une transaction ouverte par la fixture/session
+    await _rollback_si_transaction(session_test)
+
     magasin = Magasin(nom="Escat API", type_magasin=TypeMagasin.PRODUCTION, actif=True)
     fournisseur = Fournisseur(nom="Fresh API", actif=True)
-    ingredient = Ingredient(nom="Tomate API", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Tomate API", unite_stock="kg", unite_consommation="kg", actif=True)
 
     session_test.add_all([magasin, fournisseur, ingredient])
     await session_test.commit()
@@ -200,7 +283,7 @@ async def test_api_execution_production_retourne_compteurs(session_test: AsyncSe
 
     reponse = await client.post(
         f"/api/interne/production/{lot_production.id}/executer",
-        headers=_entetes_internes(),
+        headers=_entetes_internes_admin(jwt),
     )
 
     assert reponse.status_code == 200, reponse.text
@@ -214,6 +297,9 @@ async def test_api_execution_production_retourne_compteurs(session_test: AsyncSe
 @pytest.mark.asyncio
 async def test_api_planification_plan_deja_existant_retourne_409(session_test: AsyncSession) -> None:
     client = await _client_api(session_test)
+
+    jwt = await _creer_user_admin_et_jwt(session_test)
+    await _rollback_si_transaction(session_test)
 
     magasin = Magasin(nom="Magasin Conflit", type_magasin=TypeMagasin.VENTE, actif=True)
     session_test.add(magasin)
@@ -229,7 +315,7 @@ async def test_api_planification_plan_deja_existant_retourne_409(session_test: A
 
     reponse = await client.post(
         "/api/interne/production/planifier",
-        headers=_entetes_internes(),
+        headers=_entetes_internes_admin(jwt),
         json={
             "magasin_id": str(magasin.id),
             "date_plan": "2025-07-01",

@@ -106,6 +106,12 @@ class ServicePlanificationProduction:
 
         contexte = _ContexteAjustement(donnees_meteo=donnees_meteo, evenements=evenements)
 
+        # SQLAlchemy 2 peut "autobegin" une transaction au premier accès DB.
+        # Si une transaction est déjà ouverte (ex: session partagée/fixture),
+        # on évite de tenter un begin() imbriqué.
+        if self._session.sync_session.in_transaction():
+            await self._session.rollback()
+
         async with self._session.begin():
             await self._verifier_absence_plan_existant(magasin_id=magasin_id, date_plan=date_plan)
 

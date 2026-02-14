@@ -6,6 +6,8 @@ import httpx
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tests._http_helpers import entetes_internes
+
 from app.api.dependances import fournir_session
 from app.domaine.modeles import Fournisseur, Ingredient
 from app.domaine.modeles.achats import CommandeFournisseur, LigneCommandeFournisseur
@@ -33,7 +35,7 @@ async def _client_api(session_test: AsyncSession) -> httpx.AsyncClient:
 
 
 def _entetes_internes() -> dict[str, str]:
-    return {"X-CLE-INTERNE": "cle-technique"}
+    return entetes_internes()
 
 
 @pytest.mark.asyncio
@@ -53,7 +55,7 @@ async def test_dashboard_fournisseurs_vide(session_test: AsyncSession) -> None:
 async def test_dashboard_fournisseurs_avec_donnees_et_filtres(session_test: AsyncSession) -> None:
     f1 = Fournisseur(nom="Fournisseur A", actif=True)
     f2 = Fournisseur(nom="Fournisseur B", actif=True)
-    ing = Ingredient(nom="Farine", unite_stock="kg", unite_mesure="kg", cout_unitaire=2.0, actif=True)
+    ing = Ingredient(nom="Farine", unite_stock="kg", unite_consommation="kg", cout_unitaire=2.0, actif=True)
     session_test.add_all([f1, f2, ing])
     await session_test.commit()
 

@@ -69,7 +69,7 @@ async def _creer_ventes(
 
 @pytest.mark.asyncio
 async def test_jour_sans_ventes_plan_vide(session_test: AsyncSession) -> None:
-    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_consommation="kg", actif=True)
     session_test.add(ingredient)
     await session_test.commit()
 
@@ -107,7 +107,7 @@ async def test_jour_sans_ventes_plan_vide(session_test: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_jour_avec_ventes_plan_non_vide(session_test: AsyncSession) -> None:
-    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_consommation="kg", actif=True)
     session_test.add(ingredient)
     await session_test.commit()
 
@@ -154,8 +154,8 @@ async def test_jour_avec_ventes_plan_non_vide(session_test: AsyncSession) -> Non
 @pytest.mark.asyncio
 async def test_coherence_besoins_ingredients(session_test: AsyncSession) -> None:
     # 2 ingrédients
-    tomate = Ingredient(nom="Tomate", unite_stock="kg", unite_mesure="kg", actif=True)
-    sauce = Ingredient(nom="Sauce", unite_stock="kg", unite_mesure="kg", actif=True)
+    tomate = Ingredient(nom="Tomate", unite_stock="kg", unite_consommation="kg", actif=True)
+    sauce = Ingredient(nom="Sauce", unite_stock="kg", unite_consommation="kg", actif=True)
     session_test.add_all([tomate, sauce])
     await session_test.commit()
 

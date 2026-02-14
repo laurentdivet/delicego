@@ -57,7 +57,7 @@ async def test_service_envoie_email_avec_pdf_et_passe_a_envoyee(
     monkeypatch.setattr("builtins.open", _open_interdit)
 
     fournisseur = Fournisseur(nom="Fournisseur Email", actif=True)
-    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_mesure="kg", cout_unitaire=2.5, actif=True)
+    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_consommation="kg", cout_unitaire=2.5, actif=True)
     session_test.add_all([fournisseur, ingredient])
     await session_test.commit()
 
@@ -108,7 +108,7 @@ async def test_service_envoie_email_avec_pdf_et_passe_a_envoyee(
 @pytest.mark.asyncio
 async def test_service_double_envoi_interdit(session_test: AsyncSession) -> None:
     fournisseur = Fournisseur(nom="Fournisseur Email2", actif=True)
-    ingredient = Ingredient(nom="Sucre", unite_stock="kg", unite_mesure="kg", cout_unitaire=1.0, actif=True)
+    ingredient = Ingredient(nom="Sucre", unite_stock="kg", unite_consommation="kg", cout_unitaire=1.0, actif=True)
     session_test.add_all([fournisseur, ingredient])
     await session_test.commit()
 
@@ -166,7 +166,7 @@ async def test_service_rollback_si_email_echoue(session_test: AsyncSession) -> N
             raise RuntimeError("boom")
 
     fournisseur = Fournisseur(nom="Fournisseur Email3", actif=True)
-    ingredient = Ingredient(nom="Sel", unite_stock="kg", unite_mesure="kg", cout_unitaire=1.0, actif=True)
+    ingredient = Ingredient(nom="Sel", unite_stock="kg", unite_consommation="kg", cout_unitaire=1.0, actif=True)
     session_test.add_all([fournisseur, ingredient])
     await session_test.commit()
 
@@ -214,7 +214,7 @@ async def test_api_envoyer_commande_fournisseur_email(session_test: AsyncSession
     monkeypatch.setattr("builtins.open", _open_interdit)
 
     fournisseur = Fournisseur(nom="Fournisseur API Email", actif=True)
-    ingredient = Ingredient(nom="Beurre", unite_stock="kg", unite_mesure="kg", cout_unitaire=5.0, actif=True)
+    ingredient = Ingredient(nom="Beurre", unite_stock="kg", unite_consommation="kg", cout_unitaire=5.0, actif=True)
     session_test.add_all([fournisseur, ingredient])
     await session_test.commit()
 

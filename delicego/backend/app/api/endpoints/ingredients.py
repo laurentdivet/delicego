@@ -30,6 +30,14 @@ async def lister_ingredients(
     filtres = []
     if q:
         filtres.append(Ingredient.nom.ilike(f"%{q}%"))
+    # NOTE: le champ `Ingredient.produit_id` peut ne pas exister selon la version
+    # du modèle / migrations. On garde une API stable: si non supporté, on refuse
+    # explicitement plutôt que de planter en 500.
+    if has_produit is not None and not hasattr(Ingredient, "produit_id"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Filtre has_produit non supporté: aucun lien Ingredient -> Produit n'est défini.",
+        )
     if has_produit is True:
         filtres.append(Ingredient.produit_id.is_not(None))
     if has_produit is False:
@@ -37,7 +45,7 @@ async def lister_ingredients(
 
     stmt = (
         select(Ingredient)
-        .options(selectinload(Ingredient.produit))
+        .options(selectinload(Ingredient.produit) if hasattr(Ingredient, "produit") else ())
         .order_by(Ingredient.nom.asc())
         .limit(limit)
         .offset(offset)

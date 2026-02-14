@@ -49,7 +49,7 @@ async def _creer_ventes(
             magasin_id=magasin_id,
             menu_id=menu_id,
             date_vente=datetime(jour.year, jour.month, jour.day, 12, 0, 0, tzinfo=timezone.utc),
-            canal=CanalVente.COMPTOIR,
+            canal=CanalVente.INTERNE,
             quantite=float(qte),
         )
         session_test.add(vente)

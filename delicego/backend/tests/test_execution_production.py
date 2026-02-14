@@ -23,7 +23,7 @@ async def test_execution_production_genere_mouvements_et_consommations(
 ) -> None:
     magasin = Magasin(nom="Escat", type_magasin=TypeMagasin.PRODUCTION, actif=True)
     fournisseur = Fournisseur(nom="Fresh", actif=True)
-    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_consommation="kg", actif=True)
 
     session_test.add_all([magasin, fournisseur, ingredient])
     await session_test.commit()
@@ -145,7 +145,7 @@ async def test_execution_production_rollback_si_stock_insuffisant(
     session_test: AsyncSession,
 ) -> None:
     magasin = Magasin(nom="Magasin Z", type_magasin=TypeMagasin.PRODUCTION, actif=True)
-    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_consommation="kg", actif=True)
 
     session_test.add_all([magasin, ingredient])
     await session_test.commit()

@@ -61,7 +61,7 @@ async def test_dashboard_journee_sans_production_valeurs_a_zero(session_test: As
 @pytest.mark.asyncio
 async def test_dashboard_production_consommation_stock_alertes(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat", type_magasin=TypeMagasin.PRODUCTION, actif=True)
-    ing = Ingredient(nom="Farine", unite_stock="kg", unite_mesure="kg", cout_unitaire=1.0, actif=True)
+    ing = Ingredient(nom="Farine", unite_stock="kg", unite_consommation="kg", cout_unitaire=1.0, actif=True)
     session_test.add_all([magasin, ing])
     await session_test.commit()
 
@@ -142,7 +142,7 @@ async def test_dashboard_production_consommation_stock_alertes(session_test: Asy
 @pytest.mark.asyncio
 async def test_alerte_stock_bas_declenchee(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat2", type_magasin=TypeMagasin.PRODUCTION, actif=True)
-    ing = Ingredient(nom="Sel", unite_stock="kg", unite_mesure="kg", cout_unitaire=1.0, actif=True)
+    ing = Ingredient(nom="Sel", unite_stock="kg", unite_consommation="kg", cout_unitaire=1.0, actif=True)
     session_test.add_all([magasin, ing])
     await session_test.commit()
 

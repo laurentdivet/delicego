@@ -84,7 +84,7 @@ async def _setup_stock_et_bom(
     """Prépare une BOM + stock suffisant pour que `ServiceExecutionProduction` passe."""
 
     fournisseur = Fournisseur(nom="Fournisseur Cuisine API", actif=True)
-    ingredient = Ingredient(nom="Ingredient Cuisine API", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Ingredient Cuisine API", unite_stock="kg", unite_consommation="kg", actif=True)
 
     session_test.add_all([fournisseur, ingredient])
     await session_test.flush()

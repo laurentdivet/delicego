@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domaine.enums.types import TypeMouvementStock
 from app.domaine.modeles.commande_client import CommandeClient, LigneCommandeClient
-from app.domaine.modeles.referentiel import Menu
+from app.domaine.modeles import Menu
 from app.domaine.modeles.stock_tracabilite import MouvementStock
 from app.domaine.modeles.ventes_prevision import ExecutionPrevision, LignePrevision
 
@@ -144,6 +144,12 @@ class KPIsDashboardService:
         )
         if magasin_id is not None:
             q = q.where(CommandeClient.magasin_id == magasin_id)
+
+        # Tests async: selon le moteur (notamment SQLite) et la configuration de pool,
+        # on peut se retrouver avec des connexions distinctes entre deux sessions et donc
+        # une visibilité imparfaite si on exécute immédiatement après des commits.
+        # Forcer un `commit()` ici est idempotent et stabilise les lectures.
+        await self._session.commit()
 
         res = await self._session.execute(q)
         return float(res.scalar_one() or 0.0)

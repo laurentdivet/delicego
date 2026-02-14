@@ -69,17 +69,23 @@ def verifier_acces_interne(
             "INTERNAL_API_TOKEN absent: fallback DEV sur 'dev-token' (à NE PAS utiliser en prod).",
         )
 
-    # 1) Authorization: Bearer <token>
-    authorization = request.headers.get("Authorization")
+    # 1) Legacy: X-CLE-INTERNE (si jamais présent)
+    #
+    # IMPORTANT: Les routes /api/interne/* utilisent aussi l'auth applicative JWT
+    # via le header Authorization. Pour éviter les conflits, on privilégie le
+    # header legacy X-CLE-INTERNE pour le token interne, puis on fallback sur
+    # Authorization: Bearer <token interne>.
     token: str | None = None
-    if authorization:
-        prefix = "bearer "
-        if authorization.lower().startswith(prefix):
-            token = authorization[len(prefix) :].strip()
-
-    # 2) Legacy: X-CLE-INTERNE (si jamais présent)
-    if not token and x_cle_interne and x_cle_interne.strip():
+    if x_cle_interne and x_cle_interne.strip():
         token = x_cle_interne.strip()
+
+    # 2) Authorization: Bearer <token> (fallback)
+    if not token:
+        authorization = request.headers.get("Authorization")
+        if authorization:
+            prefix = "bearer "
+            if authorization.lower().startswith(prefix):
+                token = authorization[len(prefix) :].strip()
 
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token interne manquant.")

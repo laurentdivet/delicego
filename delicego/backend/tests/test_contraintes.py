@@ -28,7 +28,7 @@ async def test_creation_objets_simples(session_test: AsyncSession) -> None:
     ingredient = Ingredient(
         nom="Tomate",
         unite_stock="kg",
-        unite_mesure="kg",
+        unite_consommation="kg",
         actif=True,
     )
 
@@ -80,7 +80,7 @@ async def test_contrainte_unique_lot(session_test: AsyncSession) -> None:
     ingredient = Ingredient(
         nom="Farine",
         unite_stock="kg",
-        unite_mesure="kg",
+        unite_consommation="kg",
         actif=True,
     )
 

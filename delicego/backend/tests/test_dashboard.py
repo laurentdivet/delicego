@@ -69,8 +69,8 @@ async def test_dashboard_avec_donnees_agrege_correctement(session_test: AsyncSes
     magasin = Magasin(nom="Magasin Dash", type_magasin=TypeMagasin.PRODUCTION, actif=True)
     fournisseur = Fournisseur(nom="Fresh Dash", actif=True)
 
-    ingredient_tomate = Ingredient(nom="Tomate Dash", unite_stock="kg", unite_mesure="kg", actif=True)
-    ingredient_salade = Ingredient(nom="Salade Dash", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient_tomate = Ingredient(nom="Tomate Dash", unite_stock="kg", unite_consommation="kg", actif=True)
+    ingredient_salade = Ingredient(nom="Salade Dash", unite_stock="kg", unite_consommation="kg", actif=True)
 
     session_test.add_all([magasin, fournisseur, ingredient_tomate, ingredient_salade])
     await session_test.commit()

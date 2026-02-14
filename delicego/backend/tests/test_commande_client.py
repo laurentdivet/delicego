@@ -24,7 +24,7 @@ async def test_commande_valide_declenche_production_et_consommation_fefo(
 ) -> None:
     magasin = Magasin(nom="Escat Cmd", type_magasin=TypeMagasin.PRODUCTION, actif=True)
     fournisseur = Fournisseur(nom="Fresh Cmd", actif=True)
-    ingredient = Ingredient(nom="Tomate Cmd", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Tomate Cmd", unite_stock="kg", unite_consommation="kg", actif=True)
 
     session_test.add_all([magasin, fournisseur, ingredient])
     await session_test.commit()
@@ -139,7 +139,7 @@ async def test_commande_valide_declenche_production_et_consommation_fefo(
 async def test_commande_stock_insuffisant_rollback_total(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat Cmd KO", type_magasin=TypeMagasin.PRODUCTION, actif=True)
     fournisseur = Fournisseur(nom="Fresh Cmd KO", actif=True)
-    ingredient = Ingredient(nom="Farine Cmd KO", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Farine Cmd KO", unite_stock="kg", unite_consommation="kg", actif=True)
 
     session_test.add_all([magasin, fournisseur, ingredient])
     await session_test.commit()

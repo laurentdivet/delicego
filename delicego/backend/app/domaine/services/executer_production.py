@@ -58,6 +58,11 @@ class ServiceExecutionProduction:
         self._allocateur = AllocateurFEFO(session)
 
     async def executer(self, *, lot_production_id: UUID) -> ResultatExecutionProduction:
+        # SQLAlchemy 2 peut "autobegin" une transaction au premier accès DB.
+        # Si une transaction est déjà ouverte, on évite un begin() imbriqué.
+        if self._session.sync_session.in_transaction():
+            await self._session.rollback()
+
         async with self._session.begin():
             return await self.executer_dans_transaction(lot_production_id=lot_production_id)
 

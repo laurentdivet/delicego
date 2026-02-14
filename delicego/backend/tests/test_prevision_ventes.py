@@ -48,7 +48,7 @@ async def test_prevision_ventes_par_produit_et_fiabilite(session_test: AsyncSess
         Vente(
             magasin_id=magasin.id,
             date_vente=datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-            canal=CanalVente.COMPTOIR,
+            canal=CanalVente.INTERNE,
             menu_id=menu.id,
             quantite=5.0,
         )
@@ -59,7 +59,7 @@ async def test_prevision_ventes_par_produit_et_fiabilite(session_test: AsyncSess
         Vente(
             magasin_id=magasin.id,
             date_vente=datetime(2024, 12, 31, 12, 0, 0, tzinfo=timezone.utc),
-            canal=CanalVente.COMPTOIR,
+            canal=CanalVente.INTERNE,
             menu_id=menu.id,
             quantite=10.0,
         )

@@ -57,7 +57,7 @@ async def test_temperature_hors_seuil_detectee(session_test: AsyncSession) -> No
 async def test_dlc_depassee_detectee(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat", type_magasin=TypeMagasin.PRODUCTION, actif=True)
     fournisseur = Fournisseur(nom="Fresh", actif=True)
-    ingredient = Ingredient(nom="Saumon", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Saumon", unite_stock="kg", unite_consommation="kg", actif=True)
     session_test.add_all([magasin, fournisseur, ingredient])
     await session_test.commit()
 

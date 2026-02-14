@@ -25,7 +25,7 @@ async def test_service_genere_un_pdf_en_bytes_sans_ecriture_disque(
     monkeypatch.setattr("builtins.open", _open_interdit)
 
     fournisseur = Fournisseur(nom="Fournisseur PDF", actif=True)
-    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_mesure="kg", cout_unitaire=2.5, actif=True)
+    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_consommation="kg", cout_unitaire=2.5, actif=True)
     session_test.add_all([fournisseur, ingredient])
     await session_test.commit()
 

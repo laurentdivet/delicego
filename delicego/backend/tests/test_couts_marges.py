@@ -17,7 +17,7 @@ async def test_cout_recette_simple(session_test: AsyncSession) -> None:
     ing = Ingredient(
         nom="Riz",
         unite_stock="kg",
-        unite_mesure="kg",
+        unite_consommation="kg",
         cout_unitaire=2.0,  # 2€/kg
         actif=True,
     )
@@ -59,14 +59,14 @@ async def test_cout_menu_plusieurs_ingredients(session_test: AsyncSession) -> No
     ing1 = Ingredient(
         nom="Poulet",
         unite_stock="kg",
-        unite_mesure="kg",
+        unite_consommation="kg",
         cout_unitaire=10.0,
         actif=True,
     )
     ing2 = Ingredient(
         nom="Riz",
         unite_stock="kg",
-        unite_mesure="kg",
+        unite_consommation="kg",
         cout_unitaire=2.0,
         actif=True,
     )

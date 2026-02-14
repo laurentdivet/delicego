@@ -15,7 +15,7 @@ from app.domaine.services.disponibilite_menu import ServiceDisponibiliteMenu
 @pytest.mark.asyncio
 async def test_stock_suffisant_menu_disponible(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat", type_magasin=TypeMagasin.PRODUCTION, actif=True)
-    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_consommation="kg", actif=True)
     session_test.add_all([magasin, ingredient])
     await session_test.commit()
 
@@ -70,7 +70,7 @@ async def test_stock_suffisant_menu_disponible(session_test: AsyncSession) -> No
 @pytest.mark.asyncio
 async def test_stock_insuffisant_menu_indisponible(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat", type_magasin=TypeMagasin.PRODUCTION, actif=True)
-    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Farine", unite_stock="kg", unite_consommation="kg", actif=True)
     session_test.add_all([magasin, ingredient])
     await session_test.commit()
 
@@ -125,7 +125,7 @@ async def test_stock_insuffisant_menu_indisponible(session_test: AsyncSession) -
 @pytest.mark.asyncio
 async def test_commande_qui_vide_le_stock_rend_menu_indisponible(session_test: AsyncSession) -> None:
     magasin = Magasin(nom="Escat", type_magasin=TypeMagasin.PRODUCTION, actif=True)
-    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_mesure="kg", actif=True)
+    ingredient = Ingredient(nom="Tomate", unite_stock="kg", unite_consommation="kg", actif=True)
     session_test.add_all([magasin, ingredient])
     await session_test.commit()
 
